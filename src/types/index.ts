@@ -1,15 +1,17 @@
 
+export type Department = 'Audiophiles' | 'Vismasters' | 'adVYBE';
+
+export type UserRole = 'admin' | 'director' | 'head' | 'member';
+
 export type User = {
   id: string;
   email: string;
   name: string;
   avatar?: string;
-  role: 'admin' | 'manager' | 'member';
+  role: UserRole;
   department: Department;
   createdAt: Date;
 };
-
-export type Department = 'Audiophiles' | 'Vismasters' | 'adVYBE';
 
 export type Client = {
   id: string;
@@ -20,6 +22,7 @@ export type Client = {
   notes?: string;
   projects: Project[];
   createdAt: Date;
+  createdBy: string;
 };
 
 export type Project = {
@@ -36,6 +39,7 @@ export type Project = {
   attachments: Attachment[];
   createdAt: Date;
   updatedAt: Date;
+  createdBy: string;
 };
 
 export type ProjectStatus = 
@@ -52,12 +56,15 @@ export type Task = {
   projectId: string;
   assigneeId?: string;
   status: TaskStatus;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: TaskPriority;
   dueDate?: Date;
+  department: Department;
   comments: Comment[];
   attachments: Attachment[];
+  dependencies: TaskDependency[];
   createdAt: Date;
   updatedAt: Date;
+  createdBy: string;
 };
 
 export type TaskStatus = 
@@ -65,6 +72,19 @@ export type TaskStatus =
   | 'in-progress' 
   | 'review' 
   | 'completed';
+
+export type TaskPriority = 
+  | 'low' 
+  | 'medium' 
+  | 'high' 
+  | 'urgent';
+
+export type TaskDependency = {
+  id: string;
+  parentTaskId: string;
+  dependentTaskId: string;
+  createdAt: Date;
+};
 
 export type Comment = {
   id: string;
@@ -85,6 +105,50 @@ export type Attachment = {
   taskId?: string;
   projectId?: string;
   createdAt: Date;
+};
+
+export type Quote = {
+  id: string;
+  clientId: string;
+  projectTitle: string;
+  description?: string;
+  amount: number;
+  validUntil?: Date;
+  status: string;
+  items: QuoteItem[];
+  createdAt: Date;
+  createdBy: string;
+};
+
+export type QuoteItem = {
+  id: string;
+  quoteId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  createdAt: Date;
+};
+
+export type Agreement = {
+  id: string;
+  clientId: string;
+  projectId?: string;
+  title: string;
+  description?: string;
+  fileUrl: string;
+  department: Department;
+  createdAt: Date;
+  uploadedBy: string;
+};
+
+export type Announcement = {
+  id: string;
+  title: string;
+  content: string;
+  important: boolean;
+  expiresAt?: Date;
+  createdAt: Date;
+  createdBy: string;
 };
 
 export type Notification = {

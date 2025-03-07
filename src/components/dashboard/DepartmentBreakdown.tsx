@@ -2,25 +2,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { departmentMetrics } from '../../data/mockData';
+import { Project, Department } from '../../types';
 
-const chartData = [
-  {
-    name: 'Audiophiles',
-    active: departmentMetrics.Audiophiles.activeProjects,
-    completed: departmentMetrics.Audiophiles.completedThisMonth,
-  },
-  {
-    name: 'Vismasters',
-    active: departmentMetrics.Vismasters.activeProjects,
-    completed: departmentMetrics.Vismasters.completedThisMonth,
-  },
-  {
-    name: 'adVYBE',
-    active: departmentMetrics.adVYBE.activeProjects,
-    completed: departmentMetrics.adVYBE.completedThisMonth,
-  },
-];
+interface DepartmentMetrics {
+  name: Department;
+  active: number;
+  completed: number;
+}
+
+interface DepartmentBreakdownProps {
+  projects: Project[];
+}
 
 const colors = {
   active: 'hsl(267, 70%, 60%)',   // vybe color
@@ -49,7 +41,26 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const DepartmentBreakdown: React.FC = () => {
+const DepartmentBreakdown: React.FC<DepartmentBreakdownProps> = ({ projects }) => {
+  // Process projects to get department metrics
+  const departmentMetrics: DepartmentMetrics[] = [
+    { name: 'Audiophiles', active: 0, completed: 0 },
+    { name: 'Vismasters', active: 0, completed: 0 },
+    { name: 'adVYBE', active: 0, completed: 0 }
+  ];
+  
+  // Count active and completed projects for each department
+  projects.forEach(project => {
+    const departmentIndex = departmentMetrics.findIndex(d => d.name === project.department);
+    if (departmentIndex !== -1) {
+      if (project.status === 'completed') {
+        departmentMetrics[departmentIndex].completed += 1;
+      } else {
+        departmentMetrics[departmentIndex].active += 1;
+      }
+    }
+  });
+
   return (
     <Card className="shadow-subtle">
       <CardHeader>
@@ -59,7 +70,7 @@ const DepartmentBreakdown: React.FC = () => {
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={chartData}
+              data={departmentMetrics}
               margin={{
                 top: 20,
                 right: 20,
@@ -82,12 +93,12 @@ const DepartmentBreakdown: React.FC = () => {
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="active" name="Active Projects">
-                {chartData.map((entry, index) => (
+                {departmentMetrics.map((entry, index) => (
                   <Cell key={`active-${index}`} fill={colors.active} />
                 ))}
               </Bar>
               <Bar dataKey="completed" name="Completed Projects">
-                {chartData.map((entry, index) => (
+                {departmentMetrics.map((entry, index) => (
                   <Cell key={`completed-${index}`} fill={colors.completed} />
                 ))}
               </Bar>

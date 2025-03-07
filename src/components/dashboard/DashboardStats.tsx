@@ -2,6 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarClock, BarChart3, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Project, Task, ProjectStatus, TaskStatus } from '../../types';
+import { isAfter, isBefore, addDays } from 'date-fns';
 
 interface StatCardProps {
   title: string;
@@ -14,7 +16,13 @@ interface StatCardProps {
   };
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, description, icon, trend }) => {
+const StatCard: React.FC<StatCardProps> = ({ 
+  title, 
+  value, 
+  description, 
+  icon, 
+  trend 
+}) => {
   return (
     <Card className="shadow-subtle hover:shadow-elevated transition-shadow duration-300">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -35,12 +43,45 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, description, icon, tr
   );
 };
 
-const DashboardStats: React.FC = () => {
+interface DashboardStatsProps {
+  projects: Project[];
+  tasks: Task[];
+}
+
+const DashboardStats: React.FC<DashboardStatsProps> = ({ projects, tasks }) => {
+  // Calculate active projects
+  const activeProjects = projects.filter(
+    project => project.status === 'in-progress' || project.status === 'planning'
+  ).length;
+  
+  // Calculate completed projects in last 30 days
+  const thirtyDaysAgo = addDays(new Date(), -30);
+  const completedProjects = projects.filter(
+    project => project.status === 'completed' && isAfter(project.updatedAt, thirtyDaysAgo)
+  ).length;
+  
+  // Calculate upcoming deadlines in next 7 days
+  const sevenDaysFromNow = addDays(new Date(), 7);
+  const upcomingDeadlines = projects.filter(
+    project => 
+      project.deadline && 
+      isAfter(project.deadline, new Date()) && 
+      isBefore(project.deadline, sevenDaysFromNow)
+  ).length;
+  
+  // Calculate overdue tasks
+  const overdueTasks = tasks.filter(
+    task => 
+      task.status !== 'completed' && 
+      task.dueDate && 
+      isBefore(task.dueDate, new Date())
+  ).length;
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         title="Active Projects"
-        value={16}
+        value={activeProjects}
         description="Across all departments"
         icon={<BarChart3 className="h-4 w-4 text-vybe" />}
         trend={{
@@ -50,7 +91,7 @@ const DashboardStats: React.FC = () => {
       />
       <StatCard
         title="Completed Projects"
-        value={24}
+        value={completedProjects}
         description="In the last 30 days"
         icon={<CheckCircle2 className="h-4 w-4 text-green-600" />}
         trend={{
@@ -60,13 +101,13 @@ const DashboardStats: React.FC = () => {
       />
       <StatCard
         title="Upcoming Deadlines"
-        value={7}
+        value={upcomingDeadlines}
         description="In the next 7 days"
         icon={<CalendarClock className="h-4 w-4 text-amber-500" />}
       />
       <StatCard
         title="Overdue Tasks"
-        value={3}
+        value={overdueTasks}
         description="Requires attention"
         icon={<AlertCircle className="h-4 w-4 text-red-500" />}
         trend={{

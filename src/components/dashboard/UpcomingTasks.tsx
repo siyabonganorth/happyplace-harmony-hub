@@ -5,8 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Check, CalendarClock } from 'lucide-react';
 import { Task } from '../../types';
-import { tasks, users, projects } from '../../data/mockData';
 import { format, isPast, isFuture } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { usersApi } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const priorityColors = {
   'low': 'bg-blue-100 text-blue-800',
@@ -15,16 +17,34 @@ const priorityColors = {
   'urgent': 'bg-red-100 text-red-800'
 };
 
-const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
+interface TaskItemProps {
+  task: Task;
+}
+
+const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
+  const navigate = useNavigate();
   const priorityClass = priorityColors[task.priority];
+  
+  // Get all users to find assignee
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: usersApi.getAll
+  });
+  
   const assignee = users.find(user => user.id === task.assigneeId);
-  const project = projects.find(p => p.id === task.projectId);
   
   const isOverdue = task.dueDate ? isPast(new Date(task.dueDate)) && task.status !== 'completed' : false;
   const isUpcoming = task.dueDate ? isFuture(new Date(task.dueDate)) : false;
   
+  const handleClick = () => {
+    navigate(`/tasks/${task.id}`);
+  };
+  
   return (
-    <div className="py-3 border-b last:border-0 group">
+    <div 
+      className="py-3 border-b last:border-0 group cursor-pointer hover:bg-gray-50"
+      onClick={handleClick}
+    >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-1">
           {task.status === 'completed' ? (
@@ -46,14 +66,12 @@ const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
             </Badge>
           </div>
           
-          {project && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {project.title}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+            {task.description}
+          </p>
           
           <div className="flex justify-between items-center mt-2">
-            {assignee && (
+            {assignee ? (
               <div className="flex items-center">
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={assignee.avatar} />
@@ -63,6 +81,8 @@ const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
                 </Avatar>
                 <span className="text-xs text-muted-foreground ml-1.5">{assignee.name}</span>
               </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">Unassigned</span>
             )}
             
             {task.dueDate && (
@@ -80,7 +100,13 @@ const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
   );
 };
 
-const UpcomingTasks: React.FC = () => {
+interface UpcomingTasksProps {
+  tasks: Task[];
+}
+
+const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks }) => {
+  const navigate = useNavigate();
+  
   // Get tasks sorted by due date (upcoming first)
   const sortedTasks = [...tasks]
     .filter(task => task.dueDate && task.status !== 'completed')
@@ -93,15 +119,28 @@ const UpcomingTasks: React.FC = () => {
 
   return (
     <Card className="shadow-subtle">
-      <CardHeader>
+      <CardHeader className="flex justify-between items-center">
         <CardTitle className="text-lg font-semibold">Upcoming Tasks</CardTitle>
+        <Badge 
+          variant="outline" 
+          className="cursor-pointer hover:bg-secondary"
+          onClick={() => navigate('/tasks')}
+        >
+          View All
+        </Badge>
       </CardHeader>
       <CardContent>
-        <div className="space-y-0 divide-y">
-          {sortedTasks.map(task => (
-            <TaskItem key={task.id} task={task} />
-          ))}
-        </div>
+        {sortedTasks.length > 0 ? (
+          <div className="space-y-0 divide-y">
+            {sortedTasks.map(task => (
+              <TaskItem key={task.id} task={task} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6">
+            <p className="text-muted-foreground text-sm">No upcoming tasks</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

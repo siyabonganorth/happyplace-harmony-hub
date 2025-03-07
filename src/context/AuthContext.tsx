@@ -1,14 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { currentUser as mockUser } from '../data/mockData';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { usersApi } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string, department: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -19,50 +21,106 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if there's a stored user in localStorage
-    const storedUser = localStorage.getItem('vybeUser');
-    
-    if (storedUser) {
+    // Check if there's a session
+    const checkSession = async () => {
+      setIsLoading(true);
+      
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+        // Check if user is already authenticated
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        
+        if (authUser) {
+          // Fetch user profile
+          const userData = await usersApi.getCurrent();
+          if (userData) {
+            setUser(userData);
+          }
+        }
       } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('vybeUser');
+        console.error('Failed to get auth session:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
     
-    setIsLoading(false);
+    checkSession();
+    
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Fetch user profile after sign in
+        const userData = await usersApi.getCurrent();
+        if (userData) {
+          setUser(userData);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
     try {
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // In a real app, you would validate credentials against a backend
-      // For now, we'll just check if the email matches our mock user
-      if (email === mockUser.email && password === 'password') {
-        setUser(mockUser);
-        localStorage.setItem('vybeUser', JSON.stringify(mockUser));
-        toast.success('Login successful');
-      } else {
-        throw new Error('Invalid credentials');
-      }
-    } catch (error) {
-      toast.error('Invalid email or password');
+      if (error) throw error;
+      
+      // User profile will be fetched by the auth state change listener
+      toast.success('Login successful');
+    } catch (error: any) {
+      toast.error(error.message || 'Invalid email or password');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const register = async (email: string, password: string, name: string, department: string) => {
+    setIsLoading(true);
+    
+    try {
+      // First, sign up the user
+      const { error, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            department
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Registration successful
+      toast.success('Registration successful! Please check your email for confirmation.');
+      
+    } catch (error: any) {
+      toast.error(error.message || 'Registration failed');
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('vybeUser');
-    toast.info('Logged out successfully');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast.info('Logged out successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Logout failed');
+    }
   };
 
   return (
@@ -72,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         isLoading,
         login,
+        register,
         logout,
       }}
     >
