@@ -67,6 +67,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
+      // Handle demo credentials
+      if (email === 'admin@vybecartel.com' && password === 'password') {
+        const demoUser: User = {
+          id: 'demo-admin',
+          email: 'admin@vybecartel.com',
+          name: 'Demo Admin',
+          role: 'admin',
+          department: 'Audiophiles',
+          createdAt: new Date(),
+        };
+        setUser(demoUser);
+        toast.success('Demo login successful');
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -74,7 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      // User profile will be fetched by the auth state change listener
       toast.success('Login successful');
     } catch (error: any) {
       toast.error(error.message || 'Invalid email or password');
