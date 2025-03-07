@@ -1,5 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, Client, Project, Task, Comment, Attachment, Quote, QuoteItem, Agreement, Announcement } from '../types';
+
+// Mock projects data for demo purposes until we move this to Supabase
+const MOCK_PROJECTS: Project[] = [];
 
 const usersApi = {
   getAll: async (): Promise<User[]> => {
@@ -147,13 +151,13 @@ const projectsApi = {
   getAll: async (): Promise<Project[]> => {
     // For demo purposes, simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    return PROJECTS;
+    return MOCK_PROJECTS;
   },
   
   getById: async (id: string): Promise<Project | null> => {
     // For demo purposes, simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    return PROJECTS.find(project => project.id === id) || null;
+    return MOCK_PROJECTS.find(project => project.id === id) || null;
   },
   
   create: async (project: Omit<Project, "id" | "tasks" | "attachments" | "createdAt" | "updatedAt">): Promise<Project> => {
@@ -169,7 +173,7 @@ const projectsApi = {
       ...project
     };
     
-    PROJECTS.push(newProject);
+    MOCK_PROJECTS.push(newProject);
     return newProject;
   },
   
@@ -177,16 +181,16 @@ const projectsApi = {
     // For demo purposes, simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const index = PROJECTS.findIndex(p => p.id === id);
+    const index = MOCK_PROJECTS.findIndex(p => p.id === id);
     if (index === -1) throw new Error('Project not found');
     
     const updatedProject = {
-      ...PROJECTS[index],
+      ...MOCK_PROJECTS[index],
       ...project,
       updatedAt: new Date()
     };
     
-    PROJECTS[index] = updatedProject;
+    MOCK_PROJECTS[index] = updatedProject;
     return updatedProject;
   }
 };
@@ -705,6 +709,33 @@ const announcementsApi = {
       }));
     } catch (error) {
       console.error('Error fetching announcements:', error);
+      return [];
+    }
+  },
+  
+  // Add the missing getActive method
+  getActive: async (): Promise<Announcement[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .is('expires_at', null) // Get announcements without expiration
+        .or('expires_at.gt.now'); // Or get announcements that haven't expired yet
+      
+      if (error) throw error;
+      
+      return data.map(announcement => ({
+        id: announcement.id,
+        title: announcement.title,
+        content: announcement.content,
+        important: announcement.important || false,
+        expiresAt: announcement.expires_at ? new Date(announcement.expires_at) : undefined,
+        createdAt: new Date(announcement.created_at),
+        createdBy: announcement.created_by
+      }));
+    } catch (error) {
+      console.error('Error fetching active announcements:', error);
       return [];
     }
   },

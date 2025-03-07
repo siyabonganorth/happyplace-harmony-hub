@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
-import { Department, Task, TaskPriority, TaskStatus } from '../../types';
+import { Department, Task, TaskPriority, TaskStatus, User } from '../../types';
 import { tasksApi, projectsApi, usersApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -88,8 +89,16 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
         });
         toast.success('Task updated successfully');
       } else {
+        // Make sure title is included (not optional) to match the API's expectations
         const newTask = await tasksApi.create({
-          ...values,
+          title: values.title,
+          description: values.description,
+          projectId: values.projectId,
+          assigneeId: values.assigneeId,
+          status: values.status,
+          priority: values.priority,
+          dueDate: values.dueDate,
+          department: values.department,
           createdBy: user?.id || ''
         });
         
