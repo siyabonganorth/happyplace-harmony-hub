@@ -1,5 +1,5 @@
 
-import { User, Client, Project, Task, Department, Comment, Attachment } from '../types';
+import { User, Client, Project, Task, Department, Comment, Attachment, TaskDependency } from '../types';
 
 // Users
 export const users: User[] = [
@@ -17,7 +17,7 @@ export const users: User[] = [
     email: 'jordan@vybecartel.com',
     name: 'Jordan Lee',
     avatar: 'https://i.pravatar.cc/150?img=12',
-    role: 'manager',
+    role: 'director', // Changed from 'manager' to 'director' which is a valid UserRole
     department: 'Vismasters',
     createdAt: new Date('2023-02-20'),
   },
@@ -43,6 +43,7 @@ export const clients: Client[] = [
     notes: 'Major record label, multiple projects per year',
     projects: [],
     createdAt: new Date('2023-01-20'),
+    createdBy: '1', // Added missing createdBy property
   },
   {
     id: '2',
@@ -53,6 +54,7 @@ export const clients: Client[] = [
     notes: 'Artist management company, representing 30+ artists',
     projects: [],
     createdAt: new Date('2023-02-15'),
+    createdBy: '1', // Added missing createdBy property
   },
   {
     id: '3',
@@ -62,6 +64,7 @@ export const clients: Client[] = [
     notes: 'Independent artist, debut album',
     projects: [],
     createdAt: new Date('2023-03-05'),
+    createdBy: '2', // Added missing createdBy property
   },
 ];
 
@@ -81,6 +84,7 @@ export const projects: Project[] = [
     attachments: [],
     createdAt: new Date('2023-06-01'),
     updatedAt: new Date('2023-10-18'),
+    createdBy: '1', // Added missing createdBy property
   },
   {
     id: '2',
@@ -96,6 +100,7 @@ export const projects: Project[] = [
     attachments: [],
     createdAt: new Date('2023-09-15'),
     updatedAt: new Date('2023-10-10'),
+    createdBy: '2', // Added missing createdBy property
   },
   {
     id: '3',
@@ -111,6 +116,7 @@ export const projects: Project[] = [
     attachments: [],
     createdAt: new Date('2023-08-01'),
     updatedAt: new Date('2023-10-12'),
+    createdBy: '2', // Added missing createdBy property
   },
 ];
 
@@ -125,10 +131,13 @@ export const tasks: Task[] = [
     status: 'in-progress',
     priority: 'high',
     dueDate: new Date('2023-11-05'),
+    department: 'Audiophiles', // Added missing department property
     comments: [],
     attachments: [],
+    dependencies: [], // Added missing dependencies property
     createdAt: new Date('2023-09-20'),
     updatedAt: new Date('2023-10-15'),
+    createdBy: '1', // Added missing createdBy property
   },
   {
     id: '2',
@@ -139,10 +148,13 @@ export const tasks: Task[] = [
     status: 'todo',
     priority: 'medium',
     dueDate: new Date('2023-11-15'),
+    department: 'Audiophiles', // Added missing department property
     comments: [],
     attachments: [],
+    dependencies: [], // Added missing dependencies property
     createdAt: new Date('2023-09-25'),
     updatedAt: new Date('2023-09-25'),
+    createdBy: '1', // Added missing createdBy property
   },
   {
     id: '3',
@@ -153,10 +165,13 @@ export const tasks: Task[] = [
     status: 'review',
     priority: 'urgent',
     dueDate: new Date('2023-10-30'),
+    department: 'adVYBE', // Added missing department property
     comments: [],
     attachments: [],
+    dependencies: [], // Added missing dependencies property
     createdAt: new Date('2023-10-01'),
     updatedAt: new Date('2023-10-18'),
+    createdBy: '2', // Added missing createdBy property
   },
   {
     id: '4',
@@ -167,10 +182,13 @@ export const tasks: Task[] = [
     status: 'completed',
     priority: 'medium',
     dueDate: new Date('2023-10-10'),
+    department: 'Vismasters', // Added missing department property
     comments: [],
     attachments: [],
+    dependencies: [], // Added missing dependencies property
     createdAt: new Date('2023-09-15'),
     updatedAt: new Date('2023-10-12'),
+    createdBy: '2', // Added missing createdBy property
   },
 ];
 
@@ -246,6 +264,16 @@ export const attachments: Attachment[] = [
   },
 ];
 
+// Task dependencies
+export const taskDependencies: TaskDependency[] = [
+  {
+    id: '1',
+    parentTaskId: '1',
+    dependentTaskId: '2',
+    createdAt: new Date('2023-09-20'),
+  }
+];
+
 // Attach comments to tasks
 tasks.forEach(task => {
   task.comments = comments.filter(comment => comment.taskId === task.id);
@@ -258,6 +286,11 @@ tasks.forEach(task => {
 
 projects.forEach(project => {
   project.attachments = attachments.filter(attachment => attachment.projectId === project.id);
+});
+
+// Attach dependencies to tasks
+tasks.forEach(task => {
+  task.dependencies = taskDependencies.filter(dependency => dependency.parentTaskId === task.id);
 });
 
 // Initial data for current user
