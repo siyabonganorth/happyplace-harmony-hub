@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   User, Client, Project, Task, Comment, 
@@ -9,11 +10,6 @@ import { toast } from "sonner";
 // Helper function to format database objects to our types
 const formatDate = (date: string | null): Date | undefined => {
   return date ? new Date(date) : undefined;
-};
-
-// Helper function to format Date to ISO string for Supabase
-const formatDateForSupabase = (date: Date | undefined): string | null => {
-  return date ? date.toISOString() : null;
 };
 
 // Convert from snake_case to camelCase
@@ -109,7 +105,7 @@ export const projectsApi = {
           department: project.department,
           status: project.status,
           progress: project.progress,
-          deadline: formatDateForSupabase(project.deadline),
+          deadline: project.deadline,
           created_by: project.createdBy
         })
         .select()
@@ -150,7 +146,7 @@ export const projectsApi = {
       if (project.department) updateData.department = project.department;
       if (project.status) updateData.status = project.status;
       if (project.progress !== undefined) updateData.progress = project.progress;
-      if (project.deadline) updateData.deadline = formatDateForSupabase(project.deadline);
+      if (project.deadline) updateData.deadline = project.deadline;
       
       const { data, error } = await supabase
         .from('projects')
@@ -384,7 +380,7 @@ export const tasksApi = {
           assignee_id: task.assigneeId,
           status: task.status,
           priority: task.priority,
-          due_date: formatDateForSupabase(task.dueDate),
+          due_date: task.dueDate,
           department: task.department,
           created_by: task.createdBy
         })
@@ -427,7 +423,7 @@ export const tasksApi = {
       if (task.assigneeId !== undefined) updateData.assignee_id = task.assigneeId;
       if (task.status) updateData.status = task.status;
       if (task.priority) updateData.priority = task.priority;
-      if (task.dueDate !== undefined) updateData.due_date = formatDateForSupabase(task.dueDate);
+      if (task.dueDate !== undefined) updateData.due_date = task.dueDate;
       if (task.department) updateData.department = task.department;
       
       const { data, error } = await supabase
@@ -840,7 +836,7 @@ export const quotesApi = {
           clientId: quote.client_id,
           projectTitle: quote.project_title,
           description: quote.description || "",
-          amount: parseFloat(quote.amount.toString()),
+          amount: parseFloat(quote.amount),
           validUntil: formatDate(quote.valid_until),
           status: quote.status,
           items: items,
@@ -886,7 +882,7 @@ export const quotesApi = {
         clientId: data.client_id,
         projectTitle: data.project_title,
         description: data.description || "",
-        amount: parseFloat(data.amount.toString()),
+        amount: parseFloat(data.amount),
         validUntil: formatDate(data.valid_until),
         status: data.status,
         items: items,
@@ -908,7 +904,7 @@ export const quotesApi = {
           project_title: quote.projectTitle,
           description: quote.description,
           amount: quote.amount,
-          valid_until: formatDateForSupabase(quote.validUntil),
+          valid_until: quote.validUntil,
           status: quote.status || 'pending',
           created_by: quote.createdBy
         })
@@ -940,7 +936,7 @@ export const quotesApi = {
         clientId: data.client_id,
         projectTitle: data.project_title,
         description: data.description || "",
-        amount: parseFloat(data.amount.toString()),
+        amount: parseFloat(data.amount),
         validUntil: formatDate(data.valid_until),
         status: data.status,
         items: items.map((item, index) => ({
@@ -966,7 +962,7 @@ export const quotesApi = {
       if (quote.projectTitle) updateData.project_title = quote.projectTitle;
       if (quote.description !== undefined) updateData.description = quote.description;
       if (quote.amount !== undefined) updateData.amount = quote.amount;
-      if (quote.validUntil !== undefined) updateData.valid_until = formatDateForSupabase(quote.validUntil);
+      if (quote.validUntil !== undefined) updateData.valid_until = quote.validUntil;
       if (quote.status) updateData.status = quote.status;
       
       const { data, error } = await supabase
@@ -985,7 +981,7 @@ export const quotesApi = {
         clientId: data.client_id,
         projectTitle: data.project_title,
         description: data.description || "",
-        amount: parseFloat(data.amount.toString()),
+        amount: parseFloat(data.amount),
         validUntil: formatDate(data.valid_until),
         status: data.status,
         items: quote.items || [],
@@ -1036,10 +1032,10 @@ export const quotesApi = {
         .single();
       
       if (quoteData) {
-        const newAmount = parseFloat(quoteData.amount.toString()) + (item.quantity * item.unitPrice);
+        const newAmount = parseFloat(quoteData.amount) + (item.quantity * item.unitPrice);
         await supabase
           .from('quotes')
-          .update({ amount: newAmount.toString() })
+          .update({ amount: newAmount })
           .eq('id', item.quoteId);
       }
       
@@ -1115,5 +1111,546 @@ export const quotesApi = {
           .single();
         
         if (quoteData) {
-          const itemTotal = itemData.quantity * itemData.unitPrice
+          const itemTotal = itemData.quantity * itemData.unit_price;
+          const newAmount = parseFloat(quoteData.amount) - itemTotal;
+          await supabase
+            .from('quotes')
+            .update({ amount: Math.max(0, newAmount) }) // Ensure not negative
+            .eq('id', itemData.quote_id);
+        }
+        
+        toast.success("Quote item deleted");
+      }
+    } catch (error) {
+      handleError(error, "Failed to delete quote item");
+    }
+  }
+};
 
+// Announcements API
+export const announcementsApi = {
+  async getAll(): Promise<Announcement[]> {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return (data || []).map((announcement: any) => ({
+        id: announcement.id,
+        title: announcement.title,
+        content: announcement.content,
+        important: announcement.important,
+        expiresAt: formatDate(announcement.expires_at),
+        createdAt: new Date(announcement.created_at),
+        createdBy: announcement.created_by
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch announcements");
+    }
+  },
+  
+  async getActive(): Promise<Announcement[]> {
+    try {
+      const now = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .or(`expires_at.gt.${now},expires_at.is.null`)
+        .order('important', { ascending: false })
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return (data || []).map((announcement: any) => ({
+        id: announcement.id,
+        title: announcement.title,
+        content: announcement.content,
+        important: announcement.important,
+        expiresAt: formatDate(announcement.expires_at),
+        createdAt: new Date(announcement.created_at),
+        createdBy: announcement.created_by
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch active announcements");
+    }
+  },
+  
+  async create(announcement: Omit<Announcement, 'id' | 'createdAt'>): Promise<Announcement> {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .insert({
+          title: announcement.title,
+          content: announcement.content,
+          important: announcement.important,
+          expires_at: announcement.expiresAt,
+          created_by: announcement.createdBy
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("Announcement created successfully");
+      
+      return {
+        id: data.id,
+        title: data.title,
+        content: data.content,
+        important: data.important,
+        expiresAt: formatDate(data.expires_at),
+        createdAt: new Date(data.created_at),
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      return handleError(error, "Failed to create announcement");
+    }
+  },
+  
+  async update(announcement: Partial<Announcement> & { id: string }): Promise<Announcement> {
+    try {
+      const updateData: any = {};
+      
+      if (announcement.title) updateData.title = announcement.title;
+      if (announcement.content) updateData.content = announcement.content;
+      if (announcement.important !== undefined) updateData.important = announcement.important;
+      if (announcement.expiresAt !== undefined) updateData.expires_at = announcement.expiresAt;
+      
+      const { data, error } = await supabase
+        .from('announcements')
+        .update(updateData)
+        .eq('id', announcement.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("Announcement updated successfully");
+      
+      return {
+        id: data.id,
+        title: data.title,
+        content: data.content,
+        important: data.important,
+        expiresAt: formatDate(data.expires_at),
+        createdAt: new Date(data.created_at),
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      return handleError(error, "Failed to update announcement");
+    }
+  },
+  
+  async delete(id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('announcements')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success("Announcement deleted successfully");
+    } catch (error) {
+      handleError(error, "Failed to delete announcement");
+    }
+  }
+};
+
+// Agreements API
+export const agreementsApi = {
+  async getAll(): Promise<Agreement[]> {
+    try {
+      const { data, error } = await supabase
+        .from('agreements')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return (data || []).map((agreement: any) => ({
+        id: agreement.id,
+        clientId: agreement.client_id,
+        projectId: agreement.project_id,
+        title: agreement.title,
+        description: agreement.description || "",
+        fileUrl: agreement.file_url,
+        department: agreement.department,
+        createdAt: new Date(agreement.created_at),
+        uploadedBy: agreement.uploaded_by
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch agreements");
+    }
+  },
+  
+  async getByDepartment(department: Department): Promise<Agreement[]> {
+    try {
+      const { data, error } = await supabase
+        .from('agreements')
+        .select('*')
+        .eq('department', department)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return (data || []).map((agreement: any) => ({
+        id: agreement.id,
+        clientId: agreement.client_id,
+        projectId: agreement.project_id,
+        title: agreement.title,
+        description: agreement.description || "",
+        fileUrl: agreement.file_url,
+        department: agreement.department,
+        createdAt: new Date(agreement.created_at),
+        uploadedBy: agreement.uploaded_by
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch department agreements");
+    }
+  },
+  
+  async create(agreement: Omit<Agreement, 'id' | 'createdAt'>): Promise<Agreement> {
+    try {
+      const { data, error } = await supabase
+        .from('agreements')
+        .insert({
+          client_id: agreement.clientId,
+          project_id: agreement.projectId,
+          title: agreement.title,
+          description: agreement.description,
+          file_url: agreement.fileUrl,
+          department: agreement.department,
+          uploaded_by: agreement.uploadedBy
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("Agreement created successfully");
+      
+      return {
+        id: data.id,
+        clientId: data.client_id,
+        projectId: data.project_id,
+        title: data.title,
+        description: data.description || "",
+        fileUrl: data.file_url,
+        department: data.department,
+        createdAt: new Date(data.created_at),
+        uploadedBy: data.uploaded_by
+      };
+    } catch (error) {
+      return handleError(error, "Failed to create agreement");
+    }
+  },
+  
+  async update(agreement: Partial<Agreement> & { id: string }): Promise<Agreement> {
+    try {
+      const updateData: any = {};
+      
+      if (agreement.title) updateData.title = agreement.title;
+      if (agreement.description !== undefined) updateData.description = agreement.description;
+      if (agreement.fileUrl) updateData.file_url = agreement.fileUrl;
+      
+      const { data, error } = await supabase
+        .from('agreements')
+        .update(updateData)
+        .eq('id', agreement.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("Agreement updated successfully");
+      
+      return {
+        id: data.id,
+        clientId: data.client_id,
+        projectId: data.project_id,
+        title: data.title,
+        description: data.description || "",
+        fileUrl: data.file_url,
+        department: data.department,
+        createdAt: new Date(data.created_at),
+        uploadedBy: data.uploaded_by
+      };
+    } catch (error) {
+      return handleError(error, "Failed to update agreement");
+    }
+  },
+  
+  async delete(id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('agreements')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success("Agreement deleted successfully");
+    } catch (error) {
+      handleError(error, "Failed to delete agreement");
+    }
+  }
+};
+
+// Attachments API
+export const attachmentsApi = {
+  async getByTask(taskId: string): Promise<Attachment[]> {
+    try {
+      const { data, error } = await supabase
+        .from('attachments')
+        .select('*')
+        .eq('task_id', taskId);
+      
+      if (error) throw error;
+      
+      return (data || []).map((attachment: any) => ({
+        id: attachment.id,
+        name: attachment.name,
+        url: attachment.url,
+        type: attachment.type,
+        size: attachment.size,
+        uploadedBy: attachment.uploaded_by,
+        taskId: attachment.task_id,
+        projectId: attachment.project_id,
+        createdAt: new Date(attachment.created_at)
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch attachments");
+    }
+  },
+  
+  async getByProject(projectId: string): Promise<Attachment[]> {
+    try {
+      const { data, error } = await supabase
+        .from('attachments')
+        .select('*')
+        .eq('project_id', projectId);
+      
+      if (error) throw error;
+      
+      return (data || []).map((attachment: any) => ({
+        id: attachment.id,
+        name: attachment.name,
+        url: attachment.url,
+        type: attachment.type,
+        size: attachment.size,
+        uploadedBy: attachment.uploaded_by,
+        taskId: attachment.task_id,
+        projectId: attachment.project_id,
+        createdAt: new Date(attachment.created_at)
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch attachments");
+    }
+  },
+  
+  async create(attachment: Omit<Attachment, 'id' | 'createdAt'>): Promise<Attachment> {
+    try {
+      const { data, error } = await supabase
+        .from('attachments')
+        .insert({
+          name: attachment.name,
+          url: attachment.url,
+          type: attachment.type,
+          size: attachment.size,
+          uploaded_by: attachment.uploadedBy,
+          task_id: attachment.taskId,
+          project_id: attachment.projectId
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("File uploaded successfully");
+      
+      return {
+        id: data.id,
+        name: data.name,
+        url: data.url,
+        type: data.type,
+        size: data.size,
+        uploadedBy: data.uploaded_by,
+        taskId: data.task_id,
+        projectId: data.project_id,
+        createdAt: new Date(data.created_at)
+      };
+    } catch (error) {
+      return handleError(error, "Failed to upload file");
+    }
+  },
+  
+  async delete(id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('attachments')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success("File deleted successfully");
+    } catch (error) {
+      handleError(error, "Failed to delete file");
+    }
+  }
+};
+
+// Users/Profiles API
+export const usersApi = {
+  async getCurrent(): Promise<User | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      if (!data) return null;
+      
+      return {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        avatar: data.avatar,
+        role: data.role,
+        department: data.department,
+        createdAt: new Date(data.created_at)
+      };
+    } catch (error) {
+      console.error("Failed to get current user:", error);
+      return null;
+    }
+  },
+  
+  async getAll(): Promise<User[]> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      if (error) throw error;
+      
+      return (data || []).map((profile: any) => ({
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        avatar: profile.avatar,
+        role: profile.role,
+        department: profile.department,
+        createdAt: new Date(profile.created_at)
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch users");
+    }
+  },
+  
+  async getByDepartment(department: Department): Promise<User[]> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('department', department);
+      
+      if (error) throw error;
+      
+      return (data || []).map((profile: any) => ({
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        avatar: profile.avatar,
+        role: profile.role,
+        department: profile.department,
+        createdAt: new Date(profile.created_at)
+      }));
+    } catch (error) {
+      return handleError(error, "Failed to fetch department users");
+    }
+  },
+  
+  async update(user: Partial<User> & { id: string }): Promise<User> {
+    try {
+      const updateData: any = {};
+      
+      if (user.name) updateData.name = user.name;
+      if (user.avatar !== undefined) updateData.avatar = user.avatar;
+      if (user.role) updateData.role = user.role;
+      if (user.department) updateData.department = user.department;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("Profile updated successfully");
+      
+      return {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        avatar: data.avatar,
+        role: data.role,
+        department: data.department,
+        createdAt: new Date(data.created_at)
+      };
+    } catch (error) {
+      return handleError(error, "Failed to update profile");
+    }
+  }
+};
+
+// Storage API for file uploads
+export const storageApi = {
+  async uploadFile(file: File, path: string): Promise<string> {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${path}/${fileName}`;
+      
+      const { error } = await supabase.storage
+        .from('files')
+        .upload(filePath, file);
+      
+      if (error) throw error;
+      
+      const { data } = supabase.storage
+        .from('files')
+        .getPublicUrl(filePath);
+      
+      return data.publicUrl;
+    } catch (error) {
+      handleError(error, "Failed to upload file");
+      return "";
+    }
+  },
+  
+  async deleteFile(path: string): Promise<void> {
+    try {
+      const { error } = await supabase.storage
+        .from('files')
+        .remove([path]);
+      
+      if (error) throw error;
+    } catch (error) {
+      handleError(error, "Failed to delete file");
+    }
+  }
+};
