@@ -4,6 +4,7 @@ import { User } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usersApi } from '../services/api';
+import { USERS, DEMO_CREDENTIALS } from '../data/mockUsers';
 
 interface AuthContextType {
   user: User | null;
@@ -68,18 +69,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Handle demo credentials
-      if (email === 'admin@vybecartel.com' && password === 'password') {
-        const demoUser: User = {
-          id: 'demo-admin',
-          email: 'admin@vybecartel.com',
-          name: 'Demo Admin',
-          role: 'admin',
-          department: 'Audiophiles',
-          createdAt: new Date(),
-        };
-        setUser(demoUser);
-        toast.success('Demo login successful');
-        return;
+      const demoUser = DEMO_CREDENTIALS.find(
+        cred => cred.email === email && password === 'password'
+      );
+      
+      if (demoUser) {
+        // Find the corresponding full user data
+        const userData = USERS.find(u => u.email === email);
+        
+        if (userData) {
+          setUser(userData);
+          toast.success(`Demo login successful as ${userData.role}: ${userData.name}`);
+          return;
+        }
       }
 
       const { error } = await supabase.auth.signInWithPassword({

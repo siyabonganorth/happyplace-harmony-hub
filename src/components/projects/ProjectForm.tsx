@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,96 +16,101 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
-import { Department, Task, TaskPriority, TaskStatus } from '../../types';
-import { tasksApi, projectsApi, usersApi } from '../../services/api';
+import { Department, Project, ProjectStatus, User } from '../../types';
+import { projectsApi, clientsApi, usersApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
+import { MultiSelect } from '../ui/multi-select';
 
-const taskSchema = z.object({
+const projectSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters long' }),
   description: z.string().optional(),
-  projectId: z.string().optional(),
-  assigneeId: z.string().optional(),
-  status: z.enum(['todo', 'in-progress', 'review', 'completed']),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']),
-  dueDate: z.date().optional(),
-  department: z.enum(['Audiophiles', 'Vismasters', 'adVYBE'])
+  clientId: z.string().optional(),
+  department: z.enum(['Audiophiles', 'Vismasters', 'adVYBE']),
+  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold']),
+  progress: z.number().min(0).max(100),
+  deadline: z.date().optional(),
+  assignees: z.array(z.string()).optional()
 });
 
-type TaskFormValues = z.infer<typeof taskSchema>;
+type ProjectFormValues = z.infer<typeof projectSchema>;
 
-interface TaskFormProps {
-  existingTask?: Task;
+interface ProjectFormProps {
+  existingProject?: Project;
   onSuccess?: () => void;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
+const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   
-  const form = useForm<TaskFormValues>({
-    resolver: zodResolver(taskSchema),
+  const form = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectSchema),
     defaultValues: {
-      title: existingTask?.title || '',
-      description: existingTask?.description || '',
-      projectId: existingTask?.projectId || '',
-      assigneeId: existingTask?.assigneeId || '',
-      status: existingTask?.status || 'todo',
-      priority: existingTask?.priority || 'medium',
-      dueDate: existingTask?.dueDate,
-      department: existingTask?.department || (user?.department as Department) || 'Audiophiles'
+      title: existingProject?.title || '',
+      description: existingProject?.description || '',
+      clientId: existingProject?.clientId || '',
+      department: existingProject?.department || (user?.department as Department) || 'Audiophiles',
+      status: existingProject?.status || 'planning',
+      progress: existingProject?.progress || 0,
+      deadline: existingProject?.deadline,
+      assignees: existingProject?.assignees || []
     }
   });
   
-  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
-    queryKey: ['projects'],
-    queryFn: projectsApi.getAll
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
+    queryKey: ['clients'],
+    queryFn: clientsApi.getAll
   });
   
-  const { data: allUsers = [], isLoading: isLoadingUsers } = useQuery({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getAll
   });
 
-  const departmentProjects = projects.filter(p => p.department === form.watch('department'));
+  // Filter users based on selected department
+  const departmentUsers = users.filter(u => 
+    u.department === form.watch('department') || u.role === 'director'
+  );
   
-  useEffect(() => {
-    const department = form.watch('department');
-    setFilteredUsers(
-      allUsers.filter(u => u.department === department || u.role === 'director')
-    );
-  }, [form.watch('department'), allUsers]);
-  
-  const onSubmit = async (values: TaskFormValues) => {
+  const onSubmit = async (values: ProjectFormValues) => {
     try {
       setIsSubmitting(true);
       
-      if (existingTask) {
-        await tasksApi.update(existingTask.id, {
+      if (existingProject) {
+        // Update existing project
+        await projectsApi.update(existingProject.id, {
           ...values,
-          createdBy: existingTask.createdBy
+          createdBy: existingProject.createdBy
         });
-        toast.success('Task updated successfully');
+        toast.success('Project updated successfully');
       } else {
-        const newTask = await tasksApi.create({
-          ...values,
+        // Create new project
+        const newProject = await projectsApi.create({
+          title: values.title,
+          description: values.description || '',
+          clientId: values.clientId || '',
+          department: values.department,
+          status: values.status,
+          progress: values.progress,
+          deadline: values.deadline,
+          assignees: values.assignees || [],
           createdBy: user?.id || ''
         });
         
-        if (!newTask) throw new Error('Failed to create task');
-        toast.success('Task created successfully');
+        if (!newProject) throw new Error('Failed to create project');
+        toast.success('Project created successfully');
       }
       
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate('/tasks');
+        navigate('/projects');
       }
     } catch (error) {
-      console.error('Error saving task:', error);
-      toast.error('Failed to save task');
+      console.error('Error saving project:', error);
+      toast.error('Failed to save project');
     } finally {
       setIsSubmitting(false);
     }
@@ -113,7 +119,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>{existingTask ? 'Edit Task' : 'Create New Task'}</CardTitle>
+        <CardTitle>{existingProject ? 'Edit Project' : 'Create New Project'}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -125,7 +131,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Task title" {...field} />
+                    <Input placeholder="Project title" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,7 +146,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Enter task description" 
+                      placeholder="Enter project description" 
                       className="min-h-[120px]"
                       {...field} 
                       value={field.value || ''}
@@ -154,25 +160,25 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="projectId"
+                name="clientId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project</FormLabel>
+                    <FormLabel>Client</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
-                      disabled={isLoadingProjects}
+                      disabled={isLoadingClients}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a project" />
+                          <SelectValue placeholder="Select a client" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No project</SelectItem>
-                        {departmentProjects.map(project => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.title}
+                        <SelectItem value="">No client</SelectItem>
+                        {clients.map(client => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -184,27 +190,23 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
               
               <FormField
                 control={form.control}
-                name="assigneeId"
+                name="department"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assignee</FormLabel>
+                    <FormLabel>Department</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
-                      disabled={isLoadingUsers}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select an assignee" />
+                          <SelectValue placeholder="Select department" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Unassigned</SelectItem>
-                        {filteredUsers.map(user => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name} ({user.role})
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Audiophiles">Audiophiles</SelectItem>
+                        <SelectItem value="Vismasters">Vismasters</SelectItem>
+                        <SelectItem value="adVYBE">adVYBE</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -220,17 +222,18 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="todo">To Do</SelectItem>
+                        <SelectItem value="planning">Planning</SelectItem>
                         <SelectItem value="in-progress">In Progress</SelectItem>
                         <SelectItem value="review">Review</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="on-hold">On Hold</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -240,23 +243,20 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
               
               <FormField
                 control={form.control}
-                name="priority"
+                name="progress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Progress ({field.value}%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -266,10 +266,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="dueDate"
+                name="deadline"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>Deadline</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -299,7 +299,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
                       </PopoverContent>
                     </Popover>
                     <FormDescription>
-                      Optional: Set a due date for the task
+                      Optional: Set a deadline for the project
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -308,22 +308,24 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
               
               <FormField
                 control={form.control}
-                name="department"
+                name="assignees"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Department</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Audiophiles">Audiophiles</SelectItem>
-                        <SelectItem value="Vismasters">Vismasters</SelectItem>
-                        <SelectItem value="adVYBE">adVYBE</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Assign Team Members</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={departmentUsers.map(user => ({
+                          value: user.id,
+                          label: `${user.name} (${user.role})`
+                        }))}
+                        selected={field.value || []}
+                        onChange={field.onChange}
+                        placeholder="Select team members"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Select team members for this project
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -334,14 +336,14 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => navigate('/tasks')}
+                onClick={() => navigate('/projects')}
                 disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {existingTask ? 'Update Task' : 'Create Task'}
+                {existingProject ? 'Update Project' : 'Create Project'}
               </Button>
             </CardFooter>
           </form>
@@ -351,4 +353,4 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
   );
 };
 
-export default TaskForm;
+export default ProjectForm;

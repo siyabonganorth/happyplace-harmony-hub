@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { announcementsApi, projectsApi, tasksApi } from '../services/api';
 import { Project, Task, Announcement } from '../types';
+import { PlusCircle } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -19,6 +20,11 @@ const Dashboard: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check user permissions
+  const canCreateTask = !!user;
+  const canCreateProject = user?.role === 'director' || user?.role === 'head' || user?.role === 'admin';
+  const canCreateAnnouncement = user?.role === 'director' || user?.role === 'head' || user?.role === 'admin';
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -30,8 +36,26 @@ const Dashboard: React.FC = () => {
           announcementsApi.getActive()
         ]);
         
-        setProjects(projectsData);
-        setTasks(tasksData);
+        // Filter projects by department if user is not a director
+        let filteredProjects = projectsData;
+        if (user && user.role !== 'director') {
+          filteredProjects = projectsData.filter(p => 
+            p.department === user.department || 
+            p.assignees.includes(user.id)
+          );
+        }
+        
+        // Filter tasks by department/assignment
+        let filteredTasks = tasksData;
+        if (user && user.role !== 'director') {
+          filteredTasks = tasksData.filter(t => 
+            t.department === user.department || 
+            t.assigneeId === user.id
+          );
+        }
+        
+        setProjects(filteredProjects);
+        setTasks(filteredTasks);
         setAnnouncements(announcementsData);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -40,30 +64,42 @@ const Dashboard: React.FC = () => {
       }
     };
 
-    fetchDashboardData();
-  }, []);
-
-  const goToDepartment = () => {
-    if (user?.department) {
-      navigate(`/department/${user.department.toLowerCase()}`);
+    if (user) {
+      fetchDashboardData();
     }
-  };
+  }, [user]);
 
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back, {user?.name}</p>
+          <p className="text-muted-foreground mt-1">
+            Welcome back, {user?.name}
+            {user?.role && <span className="ml-1">({user.role})</span>}
+          </p>
         </div>
         
         <div className="flex flex-wrap gap-3">
-          <Button 
-            onClick={goToDepartment}
-            className="bg-vybe"
-          >
-            My Department
-          </Button>
+          {canCreateTask && (
+            <Button 
+              onClick={() => navigate('/tasks/create')}
+              variant="outline"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Task
+            </Button>
+          )}
+          
+          {canCreateProject && (
+            <Button 
+              onClick={() => navigate('/projects/create')}
+              variant="outline"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Project
+            </Button>
+          )}
           
           <CreateQuoteButton />
         </div>
@@ -75,7 +111,10 @@ const Dashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          <Announcements announcements={announcements} />
+          <Announcements 
+            announcements={announcements} 
+            canCreate={canCreateAnnouncement} 
+          />
           
           <DashboardStats projects={projects} tasks={tasks} />
           

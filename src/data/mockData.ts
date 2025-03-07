@@ -1,289 +1,230 @@
 
-import { User, Client, Project, Task, Department, Comment, Attachment } from '../types';
+import { Project, Task, Client, Announcement, Department, User, TaskStatus, TaskPriority, ProjectStatus } from '../types';
+import { addDays, subDays, addWeeks } from 'date-fns';
 
-// Users
-export const users: User[] = [
+// Create demo users
+export const USERS: User[] = [
   {
-    id: '1',
+    id: 'user-1',
     email: 'admin@vybecartel.com',
-    name: 'Alex Morgan',
-    avatar: 'https://i.pravatar.cc/150?img=11',
+    name: 'Admin',
     role: 'admin',
     department: 'Audiophiles',
-    createdAt: new Date('2023-01-15'),
+    createdAt: new Date()
   },
   {
-    id: '2',
-    email: 'jordan@vybecartel.com',
-    name: 'Jordan Lee',
-    avatar: 'https://i.pravatar.cc/150?img=12',
-    role: 'manager',
+    id: 'user-2',
+    email: 'director@vybecartel.com',
+    name: 'Director',
+    role: 'director',
+    department: 'Audiophiles',
+    createdAt: new Date()
+  },
+  {
+    id: 'user-3',
+    email: 'head@vybecartel.com',
+    name: 'Department Head',
+    role: 'head',
     department: 'Vismasters',
-    createdAt: new Date('2023-02-20'),
+    createdAt: new Date()
   },
   {
-    id: '3',
-    email: 'taylor@vybecartel.com',
-    name: 'Taylor Swift',
-    avatar: 'https://i.pravatar.cc/150?img=13',
+    id: 'user-4',
+    email: 'member@vybecartel.com',
+    name: 'Team Member',
     role: 'member',
     department: 'adVYBE',
-    createdAt: new Date('2023-03-10'),
-  },
+    createdAt: new Date()
+  }
 ];
 
-// Clients
-export const clients: Client[] = [
+// Demo clients
+export const CLIENTS: Client[] = [
   {
-    id: '1',
-    name: 'Soundwave Records',
-    email: 'contact@soundwave.com',
+    id: 'client-1',
+    name: 'Acme Corporation',
+    email: 'contact@acme.com',
     phone: '+1 (555) 123-4567',
-    company: 'Soundwave Records LLC',
-    notes: 'Major record label, multiple projects per year',
+    company: 'Acme Corp',
+    notes: 'Major client with multiple ongoing projects.',
     projects: [],
-    createdAt: new Date('2023-01-20'),
+    createdAt: new Date(2023, 0, 15),
+    createdBy: 'user-1'
   },
   {
-    id: '2',
-    name: 'Nova Artist Collective',
-    email: 'management@novaartists.com',
+    id: 'client-2',
+    name: 'TechStart Solutions',
+    email: 'info@techstart.com',
     phone: '+1 (555) 987-6543',
-    company: 'Nova Artist Management',
-    notes: 'Artist management company, representing 30+ artists',
+    company: 'TechStart',
+    notes: 'New client focused on tech industry.',
     projects: [],
-    createdAt: new Date('2023-02-15'),
+    createdAt: new Date(2023, 1, 10),
+    createdBy: 'user-2'
   },
   {
-    id: '3',
-    name: 'Aria Brooks',
-    email: 'aria@ariamusic.com',
+    id: 'client-3',
+    name: 'Global Retail Inc.',
+    email: 'business@globalretail.com',
     phone: '+1 (555) 456-7890',
-    notes: 'Independent artist, debut album',
+    notes: 'Retail client with seasonal campaigns.',
     projects: [],
-    createdAt: new Date('2023-03-05'),
-  },
+    createdAt: new Date(2023, 2, 5),
+    createdBy: 'user-1'
+  }
 ];
 
-// Projects
-export const projects: Project[] = [
+// Demo projects
+export const PROJECTS: Project[] = [
   {
-    id: '1',
-    title: 'Aria Brooks - Debut Album',
-    description: 'Full production and marketing for Aria\'s debut album "Neon Dreams"',
-    clientId: '3',
+    id: 'project-1',
+    title: 'Summer Campaign',
+    description: 'Comprehensive summer marketing campaign for Acme Corp.',
+    clientId: 'client-1',
     department: 'Audiophiles',
     status: 'in-progress',
     progress: 65,
-    deadline: new Date('2023-12-15'),
-    assignees: ['1', '3'],
+    deadline: addWeeks(new Date(), 3),
+    assignees: ['user-1', 'user-4'],
     tasks: [],
     attachments: [],
-    createdAt: new Date('2023-06-01'),
-    updatedAt: new Date('2023-10-18'),
+    createdAt: subDays(new Date(), 30),
+    updatedAt: subDays(new Date(), 5),
+    createdBy: 'user-1'
   },
   {
-    id: '2',
-    title: 'Soundwave Showcase Event',
-    description: 'Plan and execute the annual Soundwave artist showcase event',
-    clientId: '1',
+    id: 'project-2',
+    title: 'Website Redesign',
+    description: 'Complete redesign of TechStart corporate website.',
+    clientId: 'client-2',
     department: 'adVYBE',
     status: 'planning',
     progress: 25,
-    deadline: new Date('2024-02-28'),
-    assignees: ['2', '3'],
+    deadline: addWeeks(new Date(), 8),
+    assignees: ['user-3', 'user-4'],
     tasks: [],
     attachments: [],
-    createdAt: new Date('2023-09-15'),
-    updatedAt: new Date('2023-10-10'),
+    createdAt: subDays(new Date(), 15),
+    updatedAt: subDays(new Date(), 2),
+    createdBy: 'user-2'
   },
   {
-    id: '3',
-    title: 'Nova Artists - Promo Videos',
-    description: 'Create promotional video content for 5 Nova artists',
-    clientId: '2',
+    id: 'project-3',
+    title: 'Holiday Campaign',
+    description: 'End-of-year holiday marketing campaign for Global Retail.',
+    clientId: 'client-3',
     department: 'Vismasters',
     status: 'in-progress',
     progress: 40,
-    deadline: new Date('2023-11-30'),
-    assignees: ['2'],
+    deadline: addWeeks(new Date(), 6),
+    assignees: ['user-2', 'user-3'],
     tasks: [],
     attachments: [],
-    createdAt: new Date('2023-08-01'),
-    updatedAt: new Date('2023-10-12'),
-  },
+    createdAt: subDays(new Date(), 20),
+    updatedAt: subDays(new Date(), 1),
+    createdBy: 'user-3'
+  }
 ];
 
-// Tasks
-export const tasks: Task[] = [
+// Demo tasks
+export const TASKS: Task[] = [
   {
-    id: '1',
-    title: 'Record final vocals for tracks 3-5',
-    description: 'Schedule studio time with Aria to complete vocal recording',
-    projectId: '1',
-    assigneeId: '1',
+    id: 'task-1',
+    title: 'Create Brand Style Guide',
+    description: 'Develop a comprehensive brand style guide with color schemes, typography, and usage guidelines.',
+    projectId: 'project-1',
+    assigneeId: 'user-4',
     status: 'in-progress',
     priority: 'high',
-    dueDate: new Date('2023-11-05'),
+    dueDate: addDays(new Date(), 5),
+    department: 'Vismasters',
     comments: [],
     attachments: [],
-    createdAt: new Date('2023-09-20'),
-    updatedAt: new Date('2023-10-15'),
+    dependencies: [],
+    createdAt: subDays(new Date(), 10),
+    updatedAt: subDays(new Date(), 2),
+    createdBy: 'user-1'
   },
   {
-    id: '2',
-    title: 'Mix and master "Midnight Drive" track',
-    description: 'Complete the mix and send for mastering',
-    projectId: '1',
-    assigneeId: '1',
+    id: 'task-2',
+    title: 'Audio Production for Campaign',
+    description: 'Record and edit audio files for the summer campaign.',
+    projectId: 'project-1',
+    assigneeId: 'user-1',
     status: 'todo',
     priority: 'medium',
-    dueDate: new Date('2023-11-15'),
+    dueDate: addDays(new Date(), 10),
+    department: 'Audiophiles',
     comments: [],
     attachments: [],
-    createdAt: new Date('2023-09-25'),
-    updatedAt: new Date('2023-09-25'),
+    dependencies: [],
+    createdAt: subDays(new Date(), 8),
+    updatedAt: subDays(new Date(), 8),
+    createdBy: 'user-2'
   },
   {
-    id: '3',
-    title: 'Finalize venue contract for Soundwave Showcase',
-    description: 'Review and sign contract with Highland Ballroom',
-    projectId: '2',
-    assigneeId: '3',
+    id: 'task-3',
+    title: 'Marketing Strategy Document',
+    description: 'Finalize the marketing strategy document with budget allocation.',
+    projectId: 'project-2',
+    assigneeId: 'user-3',
     status: 'review',
     priority: 'urgent',
-    dueDate: new Date('2023-10-30'),
+    dueDate: addDays(new Date(), 2),
+    department: 'adVYBE',
     comments: [],
     attachments: [],
-    createdAt: new Date('2023-10-01'),
-    updatedAt: new Date('2023-10-18'),
+    dependencies: [],
+    createdAt: subDays(new Date(), 15),
+    updatedAt: subDays(new Date(), 1),
+    createdBy: 'user-3'
   },
   {
-    id: '4',
-    title: 'Create storyboard for Nova artist Jay Klein',
-    description: 'Develop visual concept and storyboard for promo video',
-    projectId: '3',
-    assigneeId: '2',
+    id: 'task-4',
+    title: 'Social Media Content Calendar',
+    description: 'Create a content calendar for social media posts.',
+    projectId: 'project-3',
+    assigneeId: 'user-2',
     status: 'completed',
     priority: 'medium',
-    dueDate: new Date('2023-10-10'),
+    dueDate: subDays(new Date(), 2),
+    department: 'adVYBE',
     comments: [],
     attachments: [],
-    createdAt: new Date('2023-09-15'),
-    updatedAt: new Date('2023-10-12'),
-  },
-];
-
-// Attach tasks to projects
-projects.forEach(project => {
-  project.tasks = tasks.filter(task => task.projectId === project.id);
-});
-
-// Attach projects to clients
-clients.forEach(client => {
-  client.projects = projects.filter(project => project.clientId === client.id);
-});
-
-// Comments
-export const comments: Comment[] = [
-  {
-    id: '1',
-    content: 'Aria is available next Tuesday and Wednesday for vocal recording.',
-    authorId: '3',
-    taskId: '1',
-    createdAt: new Date('2023-10-10'),
-    updatedAt: new Date('2023-10-10'),
-  },
-  {
-    id: '2',
-    content: 'I\'ve booked the studio for Tuesday, 10am-6pm.',
-    authorId: '1',
-    taskId: '1',
-    createdAt: new Date('2023-10-11'),
-    updatedAt: new Date('2023-10-11'),
-  },
-  {
-    id: '3',
-    content: 'Highland Ballroom is offering a 15% discount if we book by this Friday.',
-    authorId: '3',
-    taskId: '3',
-    createdAt: new Date('2023-10-16'),
-    updatedAt: new Date('2023-10-16'),
-  },
-];
-
-// Attachments
-export const attachments: Attachment[] = [
-  {
-    id: '1',
-    name: 'aria_reference_tracks.zip',
-    url: '#',
-    type: 'application/zip',
-    size: 25600000,
-    uploadedBy: '3',
-    projectId: '1',
-    createdAt: new Date('2023-09-18'),
-  },
-  {
-    id: '2',
-    name: 'venue_contract_draft.pdf',
-    url: '#',
-    type: 'application/pdf',
-    size: 1200000,
-    uploadedBy: '3',
-    taskId: '3',
-    createdAt: new Date('2023-10-15'),
-  },
-  {
-    id: '3',
-    name: 'jay_klein_concept_art.jpg',
-    url: '#',
-    type: 'image/jpeg',
-    size: 3500000,
-    uploadedBy: '2',
-    taskId: '4',
-    createdAt: new Date('2023-10-05'),
-  },
-];
-
-// Attach comments to tasks
-tasks.forEach(task => {
-  task.comments = comments.filter(comment => comment.taskId === task.id);
-});
-
-// Attach attachments to tasks and projects
-tasks.forEach(task => {
-  task.attachments = attachments.filter(attachment => attachment.taskId === task.id);
-});
-
-projects.forEach(project => {
-  project.attachments = attachments.filter(attachment => attachment.projectId === project.id);
-});
-
-// Initial data for current user
-export const currentUser = users[0];
-
-// Helper function to get all departments
-export const departments: Department[] = ['Audiophiles', 'Vismasters', 'adVYBE'];
-
-// Sample data for department metrics
-export const departmentMetrics = {
-  Audiophiles: {
-    activeProjects: 5,
-    completedThisMonth: 3,
-    tasksOverdue: 2,
-    upcomingDeadlines: 4
-  },
-  Vismasters: {
-    activeProjects: 7,
-    completedThisMonth: 2,
-    tasksOverdue: 1,
-    upcomingDeadlines: 5
-  },
-  adVYBE: {
-    activeProjects: 4,
-    completedThisMonth: 1,
-    tasksOverdue: 3,
-    upcomingDeadlines: 2
+    dependencies: [],
+    createdAt: subDays(new Date(), 20),
+    updatedAt: subDays(new Date(), 3),
+    createdBy: 'user-4'
   }
-};
+];
+
+// Demo announcements
+export const ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: 'ann-1',
+    title: 'Office Closed for Holiday',
+    content: 'The office will be closed on July 4th for Independence Day. Normal operations will resume on July 5th.',
+    important: true,
+    expiresAt: new Date(2023, 6, 5),
+    createdAt: new Date(2023, 6, 1),
+    createdBy: 'user-1'
+  },
+  {
+    id: 'ann-2',
+    title: 'New Project Management System',
+    content: 'We\'ve rolled out our new project management system. All team members are required to complete the training by the end of this week.',
+    important: true,
+    expiresAt: addDays(new Date(), 7),
+    createdAt: subDays(new Date(), 2),
+    createdBy: 'user-2'
+  },
+  {
+    id: 'ann-3',
+    title: 'Team Building Event',
+    content: 'Join us for a team building event this Friday at 3 PM in the main conference room. Refreshments will be provided.',
+    important: false,
+    expiresAt: addDays(new Date(), 3),
+    createdAt: subDays(new Date(), 1),
+    createdBy: 'user-3'
+  }
+];

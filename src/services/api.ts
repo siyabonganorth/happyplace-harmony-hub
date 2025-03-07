@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, Client, Project, Task, Comment, Attachment, Quote, QuoteItem, Agreement, Announcement } from '../types';
 
@@ -146,108 +145,49 @@ const clientsApi = {
 
 const projectsApi = {
   getAll: async (): Promise<Project[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*');
-      
-      if (error) throw error;
-      
-      return data.map(project => ({
-        id: project.id,
-        title: project.title,
-        description: project.description || '',
-        clientId: project.client_id || '',
-        department: project.department,
-        status: project.status || 'planning',
-        progress: project.progress || 0,
-        deadline: project.deadline ? new Date(project.deadline) : new Date(),
-        assignees: [],
-        tasks: [],
-        attachments: [],
-        createdAt: new Date(project.created_at),
-        updatedAt: new Date(project.updated_at),
-        createdBy: project.created_by
-      }));
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-      return [];
-    }
+    // For demo purposes, simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return PROJECTS;
   },
   
   getById: async (id: string): Promise<Project | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      
-      return {
-        id: data.id,
-        title: data.title,
-        description: data.description || '',
-        clientId: data.client_id || '',
-        department: data.department,
-        status: data.status || 'planning',
-        progress: data.progress || 0,
-        deadline: data.deadline ? new Date(data.deadline) : new Date(),
-        assignees: [],
-        tasks: [],
-        attachments: [],
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
-        createdBy: data.created_by
-      };
-    } catch (error) {
-      console.error(`Error fetching project ${id}:`, error);
-      return null;
-    }
+    // For demo purposes, simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return PROJECTS.find(project => project.id === id) || null;
   },
   
-  create: async (project: Omit<Project, 'id' | 'assignees' | 'tasks' | 'attachments' | 'createdAt' | 'updatedAt'>): Promise<Project | null> => {
-    try {
-      const { data: authUser } = await supabase.auth.getUser();
-      
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          title: project.title,
-          description: project.description,
-          client_id: project.clientId,
-          department: project.department,
-          status: project.status,
-          progress: project.progress,
-          deadline: project.deadline ? project.deadline.toISOString() : null,
-          created_by: authUser.user?.id || project.createdBy
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return {
-        id: data.id,
-        title: data.title,
-        description: data.description || '',
-        clientId: data.client_id || '',
-        department: data.department,
-        status: data.status || 'planning',
-        progress: data.progress || 0,
-        deadline: data.deadline ? new Date(data.deadline) : new Date(),
-        assignees: [],
-        tasks: [],
-        attachments: [],
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
-        createdBy: data.created_by
-      };
-    } catch (error) {
-      console.error('Error creating project:', error);
-      return null;
-    }
+  create: async (project: Omit<Project, "id" | "tasks" | "attachments" | "createdAt" | "updatedAt">): Promise<Project> => {
+    // For demo purposes, simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const newProject: Project = {
+      id: `project-${Date.now()}`,
+      tasks: [],
+      attachments: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...project
+    };
+    
+    PROJECTS.push(newProject);
+    return newProject;
+  },
+  
+  update: async (id: string, project: Partial<Omit<Project, "id" | "createdAt">>): Promise<Project> => {
+    // For demo purposes, simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const index = PROJECTS.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Project not found');
+    
+    const updatedProject = {
+      ...PROJECTS[index],
+      ...project,
+      updatedAt: new Date()
+    };
+    
+    PROJECTS[index] = updatedProject;
+    return updatedProject;
   }
 };
 

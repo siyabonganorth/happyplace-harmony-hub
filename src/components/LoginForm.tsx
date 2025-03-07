@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LucideLoader2 } from 'lucide-react';
 import Logo from './Logo';
+import { DEMO_CREDENTIALS } from '../data/mockUsers';
+import { Card, CardContent } from './ui/card';
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -26,8 +28,13 @@ const LoginForm: React.FC = () => {
     }
   };
 
+  const handleDemoLogin = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('password');
+  };
+
   return (
-    <div className="w-full max-w-sm px-8 py-10 mx-auto glass-panel animate-fade-in">
+    <div className="w-full max-w-md px-8 py-10 mx-auto glass-panel animate-fade-in">
       <div className="text-center mb-8">
         <Logo size="lg" className="justify-center mb-6" />
         <h2 className="text-lg text-slate-600 font-medium">Welcome to VYBE Cartel</h2>
@@ -85,10 +92,31 @@ const LoginForm: React.FC = () => {
         </Button>
       </form>
       
-      <div className="mt-6 text-center text-sm text-muted-foreground">
-        <p>For demo, use:</p>
-        <p>Email: admin@vybecartel.com</p>
-        <p>Password: password</p>
+      <div className="mt-8">
+        <h3 className="text-center text-sm font-medium mb-4">Demo Accounts</h3>
+        <Card>
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto">
+              {DEMO_CREDENTIALS.map((cred, index) => (
+                <Button 
+                  key={index} 
+                  variant="outline" 
+                  size="sm" 
+                  className="justify-start"
+                  onClick={() => handleDemoLogin(cred.email)}
+                >
+                  <div className="truncate">
+                    <span className="font-medium">{cred.role}</span>
+                    <span className="text-xs ml-2 opacity-70">{cred.email}</span>
+                  </div>
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+              Password for all demo accounts: <span className="font-medium">password</span>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

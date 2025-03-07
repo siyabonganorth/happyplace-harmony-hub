@@ -10,6 +10,7 @@ import AppLayout from "./components/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
+import CreateProject from "./pages/CreateProject";
 import Clients from "./pages/Clients";
 import Tasks from "./pages/Tasks";
 import CreateTask from "./pages/CreateTask"; 
@@ -33,6 +34,7 @@ const App = () => (
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/create" element={<CreateProject />} />
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/tasks/create" element={<CreateTask />} />
