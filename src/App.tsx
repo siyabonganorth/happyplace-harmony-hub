@@ -11,6 +11,9 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Clients from "./pages/Clients";
+import Tasks from "./pages/Tasks";
+import CreateTask from "./pages/CreateTask"; 
+import TaskDetail from "./pages/TaskDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +34,9 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/clients" element={<Clients />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/tasks/create" element={<CreateTask />} />
+                <Route path="/tasks/:id" element={<TaskDetail />} />
               </Route>
             </Route>
             
