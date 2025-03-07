@@ -1012,6 +1012,7 @@ export const quotesApi = {
     }
   },
   
+  // Quote items
   async addItem(item: Omit<QuoteItem, 'id' | 'createdAt'>): Promise<QuoteItem> {
     try {
       const { data, error } = await supabase
@@ -1114,18 +1115,5 @@ export const quotesApi = {
           .single();
         
         if (quoteData) {
-          const itemTotal = itemData.quantity * itemData.unitPrice;
-          const newAmount = parseFloat(quoteData.amount.toString()) - itemTotal;
-          await supabase
-            .from('quotes')
-            .update({ amount: newAmount.toString() })
-            .eq('id', itemData.quote_id);
-        }
-      }
-      
-      toast.success("Quote item removed");
-    } catch (error) {
-      handleError(error, "Failed to remove quote item");
-    }
-  }
-};
+          const itemTotal = itemData.quantity * itemData.unitPrice
+
