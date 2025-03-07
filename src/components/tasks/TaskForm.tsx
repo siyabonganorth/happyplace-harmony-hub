@@ -50,8 +50,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
     defaultValues: {
       title: existingTask?.title || '',
       description: existingTask?.description || '',
-      projectId: existingTask?.projectId || '',
-      assigneeId: existingTask?.assigneeId || '',
+      projectId: existingTask?.projectId || undefined,
+      assigneeId: existingTask?.assigneeId || undefined,
       status: existingTask?.status || 'todo',
       priority: existingTask?.priority || 'medium',
       dueDate: existingTask?.dueDate,
@@ -178,7 +178,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No project</SelectItem>
+                        <SelectItem value="no-project">No project</SelectItem>
                         {departmentProjects.map(project => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.title}
@@ -208,7 +208,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Unassigned</SelectItem>
+                        <SelectItem value="unassigned">Unassigned</SelectItem>
                         {filteredUsers.map(user => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.name} ({user.role})
