@@ -7,7 +7,7 @@ export const MOCK_USERS: User[] = [
   // Director
   {
     id: "director-1",
-    email: "ceejay@vybe.company",
+    email: "ceejay@vybecartel.com",
     name: "Cee-Jay",
     role: "director",
     department: "Audiophiles", // Directors can see across all departments
@@ -17,7 +17,7 @@ export const MOCK_USERS: User[] = [
   // Department heads
   {
     id: "audio-head-1",
-    email: "mntungwa@vybe.company",
+    email: "mntungwa@vybecartel.com",
     name: "Mntungwa",
     role: "head",
     department: "Audiophiles",
@@ -25,7 +25,7 @@ export const MOCK_USERS: User[] = [
   },
   {
     id: "vis-head-1",
-    email: "neo@vybe.company",
+    email: "neo@vybecartel.com",
     name: "Neo",
     role: "head",
     department: "Vismasters",
@@ -33,7 +33,7 @@ export const MOCK_USERS: User[] = [
   },
   {
     id: "ad-head-1",
-    email: "lungile@vybe.company",
+    email: "lungile@vybecartel.com",
     name: "Lungile",
     role: "head",
     department: "adVYBE",
@@ -43,7 +43,7 @@ export const MOCK_USERS: User[] = [
   // Regular department members
   {
     id: "audio-member-1",
-    email: "audio1@vybe.company",
+    email: "audio1@vybecartel.com",
     name: "Audio Team Member 1",
     role: "member",
     department: "Audiophiles",
@@ -51,7 +51,7 @@ export const MOCK_USERS: User[] = [
   },
   {
     id: "vis-member-1",
-    email: "vis1@vybe.company",
+    email: "vis1@vybecartel.com",
     name: "Visual Team Member 1",
     role: "member",
     department: "Vismasters",
@@ -59,7 +59,7 @@ export const MOCK_USERS: User[] = [
   },
   {
     id: "ad-member-1",
-    email: "ad1@vybe.company",
+    email: "ad1@vybecartel.com",
     name: "Ad Team Member 1",
     role: "member",
     department: "adVYBE",
@@ -73,31 +73,31 @@ export const USERS = MOCK_USERS;
 // Demo credentials for the login form
 export const DEMO_CREDENTIALS = [
   {
-    email: "ceejay@vybe.company",
+    email: "ceejay@vybecartel.com",
     role: "Director"
   },
   {
-    email: "mntungwa@vybe.company",
+    email: "mntungwa@vybecartel.com",
     role: "Audiophiles Head"
   },
   {
-    email: "neo@vybe.company",
+    email: "neo@vybecartel.com",
     role: "Vismasters Head"
   },
   {
-    email: "lungile@vybe.company",
+    email: "lungile@vybecartel.com",
     role: "adVYBE Head"
   },
   {
-    email: "audio1@vybe.company",
+    email: "audio1@vybecartel.com",
     role: "Audiophiles Member"
   },
   {
-    email: "vis1@vybe.company",
+    email: "vis1@vybecartel.com",
     role: "Vismasters Member"
   },
   {
-    email: "ad1@vybe.company",
+    email: "ad1@vybecartel.com",
     role: "adVYBE Member"
   }
 ];

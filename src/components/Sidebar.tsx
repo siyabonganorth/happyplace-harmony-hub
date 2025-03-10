@@ -10,8 +10,6 @@ import {
   Home, 
   Users, 
   Briefcase, 
-  Calendar, 
-  FileText, 
   BarChart3, 
   Settings, 
   Music, 
@@ -26,6 +24,7 @@ interface SidebarLink {
   name: string;
   path: string;
   icon: React.ReactNode;
+  department?: string;
 }
 
 const departmentIcons = {
@@ -39,15 +38,30 @@ const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   
+  // Base links for everyone
   const links: SidebarLink[] = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-5 w-5" /> },
     { name: 'Projects', path: '/projects', icon: <Briefcase className="h-5 w-5" /> },
-    { name: 'Clients', path: '/clients', icon: <Users className="h-5 w-5" /> },
-    { name: 'Calendar', path: '/calendar', icon: <Calendar className="h-5 w-5" /> },
-    { name: 'Documents', path: '/documents', icon: <FileText className="h-5 w-5" /> },
     { name: 'Reports', path: '/reports', icon: <BarChart3 className="h-5 w-5" /> },
     { name: 'Settings', path: '/settings', icon: <Settings className="h-5 w-5" /> },
   ];
+  
+  // Add department-specific client link
+  if (user?.department === 'Audiophiles') {
+    links.splice(2, 0, { 
+      name: 'Artists', 
+      path: '/clients', 
+      icon: <Users className="h-5 w-5" />,
+      department: 'Audiophiles'
+    });
+  } else {
+    links.splice(2, 0, { 
+      name: 'Clients', 
+      path: '/clients', 
+      icon: <Users className="h-5 w-5" />,
+      department: user?.department
+    });
+  }
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);

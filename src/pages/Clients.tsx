@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { clientsApi } from '../services/api';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash2, Phone, Mail, Building } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Phone, Mail, Building, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const ClientForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
   const { user } = useAuth();
@@ -36,8 +37,12 @@ const ClientForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
     email: '',
     phone: '',
     company: '',
-    notes: ''
+    notes: '',
+    documentUrl: ''
   });
+
+  // Get client label based on department
+  const clientLabel = user?.department === 'Audiophiles' ? 'Artist' : 'Client';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -48,7 +53,7 @@ const ClientForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
     e.preventDefault();
     
     if (!formData.name) {
-      toast.error('Client name is required');
+      toast.error(`${clientLabel} name is required`);
       return;
     }
     
@@ -59,18 +64,19 @@ const ClientForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
         createdBy: user?.id || '00000000-0000-0000-0000-000000000000'
       });
       
-      toast.success('Client created successfully');
+      toast.success(`${clientLabel} created successfully`);
       onSuccess();
       setFormData({
         name: '',
         email: '',
         phone: '',
         company: '',
-        notes: ''
+        notes: '',
+        documentUrl: ''
       });
     } catch (error) {
-      console.error('Error creating client:', error);
-      toast.error('Failed to create client');
+      console.error(`Error creating ${clientLabel.toLowerCase()}:`, error);
+      toast.error(`Failed to create ${clientLabel.toLowerCase()}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -122,6 +128,20 @@ const ClientForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
         </div>
         
         <div className="grid gap-2">
+          <Label htmlFor="documentUrl">Document URL</Label>
+          <Input
+            id="documentUrl"
+            name="documentUrl"
+            value={formData.documentUrl}
+            onChange={handleChange}
+            placeholder="https://drive.google.com/..."
+          />
+          <p className="text-xs text-muted-foreground">
+            Please upload your document to Google Drive and paste the shared link here
+          </p>
+        </div>
+        
+        <div className="grid gap-2">
           <Label htmlFor="notes">Notes</Label>
           <Textarea
             id="notes"
@@ -135,7 +155,7 @@ const ClientForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
       
       <DialogFooter>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating...' : 'Create Client'}
+          {isSubmitting ? `Creating...` : `Create ${clientLabel}`}
         </Button>
       </DialogFooter>
     </form>
@@ -149,6 +169,10 @@ const Clients: React.FC = () => {
   
   // Check if user can create clients (directors, heads, or admins)
   const canCreateClient = user?.role === 'director' || user?.role === 'head' || user?.role === 'admin';
+  
+  // Determine client label based on department
+  const clientLabel = user?.department === 'Audiophiles' ? 'Artist' : 'Client';
+  const clientsLabel = user?.department === 'Audiophiles' ? 'Artists' : 'Clients';
 
   const { 
     data: clients = [], 
@@ -168,7 +192,7 @@ const Clients: React.FC = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Clients</h1>
+        <h1 className="text-3xl font-bold">{clientsLabel}</h1>
         
         <div className="flex gap-2">
           <Button onClick={() => navigate('/projects')} variant="outline">
@@ -180,14 +204,14 @@ const Clients: React.FC = () => {
               <DialogTrigger asChild>
                 <Button>
                   <PlusCircle className="h-5 w-5 mr-2" />
-                  Add Client
+                  Add {clientLabel}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Add New Client</DialogTitle>
+                  <DialogTitle>Add New {clientLabel}</DialogTitle>
                   <DialogDescription>
-                    Fill in the details to create a new client.
+                    Fill in the details to create a new {clientLabel.toLowerCase()}.
                   </DialogDescription>
                 </DialogHeader>
                 <ClientForm onSuccess={handleSuccess} />
@@ -196,6 +220,13 @@ const Clients: React.FC = () => {
           )}
         </div>
       </div>
+      
+      <Alert className="mb-6">
+        <FileText className="h-4 w-4" />
+        <AlertDescription>
+          To attach documents to {clientsLabel.toLowerCase()}, please upload them to your Google Drive and paste the shared link in the Document URL field.
+        </AlertDescription>
+      </Alert>
       
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -213,18 +244,18 @@ const Clients: React.FC = () => {
         </div>
       ) : isError ? (
         <div className="text-center py-10">
-          <h3 className="text-lg font-medium text-gray-900">Error loading clients</h3>
+          <h3 className="text-lg font-medium text-gray-900">Error loading {clientsLabel.toLowerCase()}</h3>
           <p className="mt-1 text-sm text-gray-500">Please try again later</p>
           <Button className="mt-4" onClick={() => refetch()}>Retry</Button>
         </div>
       ) : clients.length === 0 ? (
         <div className="text-center py-10">
-          <h3 className="text-lg font-medium text-gray-900">No clients found</h3>
+          <h3 className="text-lg font-medium text-gray-900">No {clientsLabel.toLowerCase()} found</h3>
           {canCreateClient ? (
-            <p className="mt-1 text-sm text-gray-500">Add your first client to get started</p>
+            <p className="mt-1 text-sm text-gray-500">Add your first {clientLabel.toLowerCase()} to get started</p>
           ) : (
             <p className="mt-1 text-sm text-gray-500">
-              No clients have been added yet
+              No {clientsLabel.toLowerCase()} have been added yet
             </p>
           )}
           {canCreateClient && (
@@ -232,14 +263,14 @@ const Clients: React.FC = () => {
               <DialogTrigger asChild>
                 <Button className="mt-4">
                   <PlusCircle className="h-5 w-5 mr-2" />
-                  Add First Client
+                  Add First {clientLabel}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Add New Client</DialogTitle>
+                  <DialogTitle>Add New {clientLabel}</DialogTitle>
                   <DialogDescription>
-                    Fill in the details to create a new client.
+                    Fill in the details to create a new {clientLabel.toLowerCase()}.
                   </DialogDescription>
                 </DialogHeader>
                 <ClientForm onSuccess={handleSuccess} />
@@ -276,6 +307,14 @@ const Clients: React.FC = () => {
                     <Phone className="h-4 w-4 mr-2 text-gray-500" />
                     <a href={`tel:${client.phone}`} className="text-blue-600 hover:underline">
                       {client.phone}
+                    </a>
+                  </div>
+                )}
+                {client.documentUrl && (
+                  <div className="flex items-center text-sm">
+                    <FileText className="h-4 w-4 mr-2 text-gray-500" />
+                    <a href={client.documentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      View Document
                     </a>
                   </div>
                 )}

@@ -1,4 +1,5 @@
 
+// Let's update just the status field in the ProjectForm component
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,12 +23,13 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { MultiSelect } from '../ui/multi-select';
 
+// Updated schema to include the new project statuses
 const projectSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters long' }),
   description: z.string().optional(),
   clientId: z.string().optional(),
   department: z.enum(['Audiophiles', 'Vismasters', 'adVYBE']),
-  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold']),
+  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled']),
   progress: z.number().min(0).max(100),
   deadline: z.date().optional(),
   assignees: z.array(z.string()).optional()
@@ -163,7 +165,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
                 name="clientId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Client</FormLabel>
+                    <FormLabel>{user?.department === 'Audiophiles' ? 'Artist' : 'Client'}</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
@@ -171,11 +173,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a client" />
+                          <SelectValue placeholder={`Select ${user?.department === 'Audiophiles' ? 'an artist' : 'a client'}`} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No client</SelectItem>
+                        <SelectItem value="">No {user?.department === 'Audiophiles' ? 'artist' : 'client'}</SelectItem>
                         {clients.map(client => (
                           <SelectItem key={client.id} value={client.id}>
                             {client.name}
@@ -234,6 +236,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
                         <SelectItem value="review">Review</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="on-hold">On Hold</SelectItem>
+                        <SelectItem value="failed">Failed</SelectItem>
+                        <SelectItem value="canceled">Canceled</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
