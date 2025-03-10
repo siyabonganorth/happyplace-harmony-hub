@@ -1,9 +1,94 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, Client, Project, Task, Comment, Attachment, Quote, QuoteItem, Agreement, Announcement } from '../types';
 
 // Mock projects data for demo purposes until we move this to Supabase
-const MOCK_PROJECTS: Project[] = [];
+const MOCK_PROJECTS: Project[] = [
+  {
+    id: 'project-audiophiles-1',
+    title: 'Audio Production Project',
+    description: 'A sample audio production project',
+    clientId: 'client-1',
+    department: 'Audiophiles',
+    status: 'in-progress',
+    progress: 25,
+    deadline: new Date('2023-12-31'),
+    assignees: ['audio-head-1', 'audio-member-1'],
+    tasks: [],
+    attachments: [],
+    createdAt: new Date('2023-01-15'),
+    updatedAt: new Date('2023-01-15'),
+    createdBy: 'director-1'
+  },
+  {
+    id: 'project-vismasters-1',
+    title: 'Visual Design Project',
+    description: 'A sample visual design project',
+    clientId: 'client-2',
+    department: 'Vismasters',
+    status: 'planning',
+    progress: 10,
+    deadline: new Date('2023-12-15'),
+    assignees: ['vis-head-1'],
+    tasks: [],
+    attachments: [],
+    createdAt: new Date('2023-01-10'),
+    updatedAt: new Date('2023-01-10'),
+    createdBy: 'director-1'
+  },
+  {
+    id: 'project-advybe-1',
+    title: 'Marketing Campaign',
+    description: 'A sample marketing campaign',
+    clientId: 'client-3',
+    department: 'adVYBE',
+    status: 'planning',
+    progress: 5,
+    deadline: new Date('2023-11-30'),
+    assignees: ['ad-head-1'],
+    tasks: [],
+    attachments: [],
+    createdAt: new Date('2023-01-05'),
+    updatedAt: new Date('2023-01-05'),
+    createdBy: 'director-1'
+  }
+];
+
+// Mock clients data for demo purposes
+const MOCK_CLIENTS: Client[] = [
+  {
+    id: 'client-1',
+    name: 'Audiophiles Client',
+    email: 'audioclient@example.com',
+    phone: '123-456-7890',
+    company: 'Audio Company',
+    notes: 'A sample client for audio projects',
+    projects: [],
+    createdAt: new Date('2023-01-01'),
+    createdBy: 'director-1'
+  },
+  {
+    id: 'client-2',
+    name: 'Vismasters Client',
+    email: 'visclient@example.com',
+    phone: '123-456-7891',
+    company: 'Visual Company',
+    notes: 'A sample client for visual projects',
+    projects: [],
+    createdAt: new Date('2023-01-02'),
+    createdBy: 'director-1'
+  },
+  {
+    id: 'client-3',
+    name: 'adVYBE Client',
+    email: 'adclient@example.com',
+    phone: '123-456-7892',
+    company: 'Advertising Company',
+    notes: 'A sample client for advertising projects',
+    projects: [],
+    createdAt: new Date('2023-01-03'),
+    createdBy: 'director-1'
+  }
+];
 
 const usersApi = {
   getAll: async (): Promise<User[]> => {
@@ -93,20 +178,24 @@ const clientsApi = {
       
       if (error) throw error;
       
-      return data.map(client => ({
-        id: client.id,
-        name: client.name,
-        email: client.email || '',
-        phone: client.phone || undefined,
-        company: client.company || undefined,
-        notes: client.notes || undefined,
-        projects: [],
-        createdAt: new Date(client.created_at),
-        createdBy: client.created_by
-      }));
+      if (data && data.length > 0) {
+        return data.map(client => ({
+          id: client.id,
+          name: client.name,
+          email: client.email || '',
+          phone: client.phone || undefined,
+          company: client.company || undefined,
+          notes: client.notes || undefined,
+          projects: [],
+          createdAt: new Date(client.created_at),
+          createdBy: client.created_by
+        }));
+      } else {
+        return MOCK_CLIENTS;
+      }
     } catch (error) {
       console.error('Error fetching clients:', error);
-      return [];
+      return MOCK_CLIENTS;
     }
   },
   
@@ -149,49 +238,195 @@ const clientsApi = {
 
 const projectsApi = {
   getAll: async (): Promise<Project[]> => {
-    // For demo purposes, simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return MOCK_PROJECTS;
+    try {
+      // Try to get from Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*');
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        return data.map(project => ({
+          id: project.id,
+          title: project.title,
+          description: project.description || '',
+          clientId: project.client_id || '',
+          department: project.department,
+          status: project.status || 'planning',
+          progress: project.progress || 0,
+          deadline: project.deadline ? new Date(project.deadline) : undefined,
+          assignees: [],  // Would need another query to get this
+          tasks: [],      // Would need another query to get this
+          attachments: [], // Would need another query to get this
+          createdAt: new Date(project.created_at),
+          updatedAt: new Date(project.updated_at),
+          createdBy: project.created_by
+        }));
+      } else {
+        // Return mock data if no projects in database
+        return MOCK_PROJECTS;
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      // For demo purposes, return mock data on error
+      return MOCK_PROJECTS;
+    }
   },
   
   getById: async (id: string): Promise<Project | null> => {
-    // For demo purposes, simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return MOCK_PROJECTS.find(project => project.id === id) || null;
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) throw error;
+      
+      if (data) {
+        return {
+          id: data.id,
+          title: data.title,
+          description: data.description || '',
+          clientId: data.client_id || '',
+          department: data.department,
+          status: data.status || 'planning',
+          progress: data.progress || 0,
+          deadline: data.deadline ? new Date(data.deadline) : undefined,
+          assignees: [],  // Would need another query to get this
+          tasks: [],      // Would need another query to get this
+          attachments: [], // Would need another query to get this
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at),
+          createdBy: data.created_by
+        };
+      }
+      
+      // If not found in database, check mock data
+      return MOCK_PROJECTS.find(project => project.id === id) || null;
+    } catch (error) {
+      console.error(`Error fetching project ${id}:`, error);
+      // For demo purposes, check mock data on error
+      return MOCK_PROJECTS.find(project => project.id === id) || null;
+    }
   },
   
   create: async (project: Omit<Project, "id" | "tasks" | "attachments" | "createdAt" | "updatedAt">): Promise<Project> => {
-    // For demo purposes, simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const newProject: Project = {
-      id: `project-${Date.now()}`,
-      tasks: [],
-      attachments: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...project
-    };
-    
-    MOCK_PROJECTS.push(newProject);
-    return newProject;
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          title: project.title,
+          description: project.description,
+          client_id: project.clientId,
+          department: project.department,
+          status: project.status,
+          progress: project.progress,
+          deadline: project.deadline ? project.deadline.toISOString() : null,
+          created_by: project.createdBy
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      if (data) {
+        return {
+          id: data.id,
+          title: data.title,
+          description: data.description || '',
+          clientId: data.client_id || '',
+          department: data.department,
+          status: data.status || 'planning',
+          progress: data.progress || 0,
+          deadline: data.deadline ? new Date(data.deadline) : undefined,
+          assignees: project.assignees || [],
+          tasks: [],
+          attachments: [],
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at),
+          createdBy: data.created_by
+        };
+      }
+      
+      throw new Error('Failed to create project');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      
+      // Fallback to mock data for demo purposes
+      const newProject: Project = {
+        id: `project-${Date.now()}`,
+        tasks: [],
+        attachments: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...project
+      };
+      
+      MOCK_PROJECTS.push(newProject);
+      return newProject;
+    }
   },
   
   update: async (id: string, project: Partial<Omit<Project, "id" | "createdAt">>): Promise<Project> => {
-    // For demo purposes, simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const index = MOCK_PROJECTS.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Project not found');
-    
-    const updatedProject = {
-      ...MOCK_PROJECTS[index],
-      ...project,
-      updatedAt: new Date()
-    };
-    
-    MOCK_PROJECTS[index] = updatedProject;
-    return updatedProject;
+    try {
+      // First try to update in Supabase
+      const supabaseUpdates: Record<string, any> = {};
+      
+      if (project.title) supabaseUpdates.title = project.title;
+      if (project.description !== undefined) supabaseUpdates.description = project.description;
+      if (project.clientId) supabaseUpdates.client_id = project.clientId;
+      if (project.department) supabaseUpdates.department = project.department;
+      if (project.status) supabaseUpdates.status = project.status;
+      if (project.progress !== undefined) supabaseUpdates.progress = project.progress;
+      if (project.deadline !== undefined) supabaseUpdates.deadline = project.deadline ? project.deadline.toISOString() : null;
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .update(supabaseUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      if (data) {
+        return {
+          id: data.id,
+          title: data.title,
+          description: data.description || '',
+          clientId: data.client_id || '',
+          department: data.department,
+          status: data.status || 'planning',
+          progress: data.progress || 0,
+          deadline: data.deadline ? new Date(data.deadline) : undefined,
+          assignees: [], // Would need another query
+          tasks: [],     // Would need another query
+          attachments: [], // Would need another query
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at),
+          createdBy: data.created_by
+        };
+      }
+      
+      throw new Error('Project not found');
+    } catch (error) {
+      console.error(`Error updating project ${id}:`, error);
+      
+      // Fallback to mock data for demo purposes
+      const index = MOCK_PROJECTS.findIndex(p => p.id === id);
+      if (index === -1) throw new Error('Project not found');
+      
+      const updatedProject = {
+        ...MOCK_PROJECTS[index],
+        ...project,
+        updatedAt: new Date()
+      };
+      
+      MOCK_PROJECTS[index] = updatedProject;
+      return updatedProject;
+    }
   }
 };
 
@@ -713,7 +948,6 @@ const announcementsApi = {
     }
   },
   
-  // Add the missing getActive method
   getActive: async (): Promise<Announcement[]> => {
     try {
       const { data, error } = await supabase

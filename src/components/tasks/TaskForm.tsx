@@ -1,38 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { CalendarIcon, Loader2 } from 'lucide-react';
-import { Department, Task, TaskPriority, TaskStatus, User } from '../../types';
-import { tasksApi, projectsApi, usersApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
-
-const taskSchema = z.object({
-  title: z.string().min(3, { message: 'Title must be at least 3 characters long' }),
-  description: z.string().optional(),
-  projectId: z.string().optional(),
-  assigneeId: z.string().optional(),
-  status: z.enum(['todo', 'in-progress', 'review', 'completed']),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']),
-  dueDate: z.date().optional(),
-  department: z.enum(['Audiophiles', 'Vismasters', 'adVYBE'])
-});
-
-type TaskFormValues = z.infer<typeof taskSchema>;
+import { Task } from '../../types';
+import { tasksApi } from '../../services/api';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+import { TaskFormProvider } from './TaskFormContext';
+import TaskBasicDetails from './TaskBasicDetails';
+import TaskProjectAssignment from './TaskProjectAssignment';
+import TaskAssigneeSelect from './TaskAssigneeSelect';
+import TaskStatusPriority from './TaskStatusPriority';
+import TaskDueDateDepartment from './TaskDueDateDepartment';
 
 interface TaskFormProps {
   existingTask?: Task;
@@ -43,43 +24,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   
-  const form = useForm<TaskFormValues>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: {
-      title: existingTask?.title || '',
-      description: existingTask?.description || '',
-      projectId: existingTask?.projectId || undefined,
-      assigneeId: existingTask?.assigneeId || undefined,
-      status: existingTask?.status || 'todo',
-      priority: existingTask?.priority || 'medium',
-      dueDate: existingTask?.dueDate,
-      department: existingTask?.department || (user?.department as Department) || 'Audiophiles'
-    }
-  });
-  
-  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
-    queryKey: ['projects'],
-    queryFn: projectsApi.getAll
-  });
-  
-  const { data: allUsers = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users'],
-    queryFn: usersApi.getAll
-  });
-
-  const departmentProjects = projects.filter(p => p.department === form.watch('department'));
-  
-  useEffect(() => {
-    const department = form.watch('department');
-    setFilteredUsers(
-      allUsers.filter(u => u.department === department || u.role === 'director')
-    );
-  }, [form.watch('department'), allUsers]);
-  
-  const onSubmit = async (values: TaskFormValues) => {
+  const onSubmit = async (values: any) => {
     try {
+      // Validation: Ensure a project is selected
+      if (!values.projectId || values.projectId === "no-project") {
+        toast.error('A project must be selected to create a task');
+        return;
+      }
+      
       setIsSubmitting(true);
       
       if (existingTask) {
@@ -94,7 +47,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
           title: values.title,
           description: values.description,
           projectId: values.projectId,
-          assigneeId: values.assigneeId,
+          assigneeId: values.assigneeId === "unassigned" ? undefined : values.assigneeId,
           status: values.status,
           priority: values.priority,
           dueDate: values.dueDate,
@@ -125,236 +78,38 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
         <CardTitle>{existingTask ? 'Edit Task' : 'Create New Task'}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Task title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Enter task description" 
-                      className="min-h-[120px]"
-                      {...field} 
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="projectId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      value={field.value}
-                      disabled={isLoadingProjects}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a project" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="no-project">No project</SelectItem>
-                        {departmentProjects.map(project => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="assigneeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assignee</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      value={field.value}
-                      disabled={isLoadingUsers}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an assignee" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {filteredUsers.map(user => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name} ({user.role})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="todo">To Do</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="review">Review</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Due Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      Optional: Set a due date for the task
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="department"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Department</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Audiophiles">Audiophiles</SelectItem>
-                        <SelectItem value="Vismasters">Vismasters</SelectItem>
-                        <SelectItem value="adVYBE">adVYBE</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <CardFooter className="flex justify-end gap-2 px-0">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => navigate('/tasks')}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {existingTask ? 'Update Task' : 'Create Task'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+        <TaskFormProvider existingTask={existingTask} onSubmit={onSubmit}>
+          <TaskBasicDetails />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <TaskProjectAssignment required={true} />
+            <TaskAssigneeSelect />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <TaskStatusPriority />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <TaskDueDateDepartment />
+          </div>
+          
+          <CardFooter className="flex justify-end gap-2 px-0 mt-6">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => navigate('/tasks')}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              form="task-form" // Connect to the form ID in the context
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {existingTask ? 'Update Task' : 'Create Task'}
+            </Button>
+          </CardFooter>
+        </TaskFormProvider>
       </CardContent>
     </Card>
   );

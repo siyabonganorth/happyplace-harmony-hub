@@ -7,7 +7,7 @@ export const USERS: User[] = [
   {
     id: 'director-1',
     email: 'director@vybecartel.com',
-    name: 'Director',
+    name: 'Cee-Jay Siyabonga',
     role: 'director',
     department: 'Audiophiles', // Primary department, but has access to all
     createdAt: new Date('2023-01-01'),
@@ -18,7 +18,7 @@ export const USERS: User[] = [
   {
     id: 'audio-head-1',
     email: 'audiohead@vybecartel.com',
-    name: 'Audio Department Head',
+    name: 'Mntungwa',
     role: 'head',
     department: 'Audiophiles',
     createdAt: new Date('2023-01-15'),
@@ -38,7 +38,7 @@ export const USERS: User[] = [
   {
     id: 'vis-head-1',
     email: 'vishead@vybecartel.com',
-    name: 'Visual Department Head',
+    name: 'Neo',
     role: 'head',
     department: 'Vismasters',
     createdAt: new Date('2023-01-10'),
@@ -58,7 +58,7 @@ export const USERS: User[] = [
   {
     id: 'ad-head-1',
     email: 'adhead@vybecartel.com',
-    name: 'Advertising Department Head',
+    name: 'Lungile',
     role: 'head',
     department: 'adVYBE',
     createdAt: new Date('2023-01-12'),
@@ -77,11 +77,11 @@ export const USERS: User[] = [
 
 // Demo credentials for login
 export const DEMO_CREDENTIALS = [
-  { email: 'director@vybecartel.com', password: 'password', role: 'Director' },
-  { email: 'audiohead@vybecartel.com', password: 'password', role: 'Audiophiles Head' },
+  { email: 'director@vybecartel.com', password: 'password', role: 'Director (Cee-Jay Siyabonga)' },
+  { email: 'audiohead@vybecartel.com', password: 'password', role: 'Audiophiles Head (Mntungwa)' },
   { email: 'audiomember@vybecartel.com', password: 'password', role: 'Audiophiles Member' },
-  { email: 'vishead@vybecartel.com', password: 'password', role: 'Vismasters Head' },
+  { email: 'vishead@vybecartel.com', password: 'password', role: 'Vismasters Head (Neo)' },
   { email: 'vismember@vybecartel.com', password: 'password', role: 'Vismasters Member' },
-  { email: 'adhead@vybecartel.com', password: 'password', role: 'adVYBE Head' },
+  { email: 'adhead@vybecartel.com', password: 'password', role: 'adVYBE Head (Lungile)' },
   { email: 'admember@vybecartel.com', password: 'password', role: 'adVYBE Member' },
 ];
