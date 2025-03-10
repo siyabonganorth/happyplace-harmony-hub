@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
-import { Task } from '../../types';
+import { Task, User } from '../../types';
 import { tasksApi } from '../../services/api';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
       
       setIsSubmitting(true);
       
+      // For debugging - remove in production
+      console.log("Creating task with values:", values);
+      console.log("Current user:", user);
+      
       if (existingTask) {
         await tasksApi.update(existingTask.id, {
           ...values,
@@ -42,7 +46,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
         });
         toast.success('Task updated successfully');
       } else {
-        // Make sure title is included (not optional) to match the API's expectations
+        // Make sure the created_by value is a proper UUID from the database
+        // For now, we'll use a placeholder UUID that matches Supabase's format
+        const createdById = user?.id || '00000000-0000-0000-0000-000000000000';
+        
         const newTask = await tasksApi.create({
           title: values.title,
           description: values.description,
@@ -52,7 +59,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, onSuccess }) => {
           priority: values.priority,
           dueDate: values.dueDate,
           department: values.department,
-          createdBy: user?.id || ''
+          createdBy: createdById
         });
         
         if (!newTask) throw new Error('Failed to create task');
