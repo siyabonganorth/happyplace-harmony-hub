@@ -1,5 +1,3 @@
-
-// Let's update just the status field in the ProjectForm component
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,7 +21,6 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { MultiSelect } from '../ui/multi-select';
 
-// Updated schema to include the new project statuses
 const projectSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters long' }),
   description: z.string().optional(),
@@ -71,7 +68,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
     queryFn: usersApi.getAll
   });
 
-  // Filter users based on selected department
   const departmentUsers = users.filter(u => 
     u.department === form.watch('department') || u.role === 'director'
   );
@@ -81,14 +77,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
       setIsSubmitting(true);
       
       if (existingProject) {
-        // Update existing project
         await projectsApi.update(existingProject.id, {
           ...values,
           createdBy: existingProject.createdBy
         });
         toast.success('Project updated successfully');
       } else {
-        // Create new project
         const newProject = await projectsApi.create({
           title: values.title,
           description: values.description || '',

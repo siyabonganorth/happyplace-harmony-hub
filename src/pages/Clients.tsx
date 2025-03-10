@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { clientsApi } from '../services/api';
@@ -41,7 +40,6 @@ const ClientForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
     documentUrl: ''
   });
 
-  // Get client label based on department
   const clientLabel = user?.department === 'Audiophiles' ? 'Artist' : 'Client';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -167,10 +165,8 @@ const Clients: React.FC = () => {
   const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  // Check if user can create clients (directors, heads, or admins)
   const canCreateClient = user?.role === 'director' || user?.role === 'head' || user?.role === 'admin';
   
-  // Determine client label based on department
   const clientLabel = user?.department === 'Audiophiles' ? 'Artist' : 'Client';
   const clientsLabel = user?.department === 'Audiophiles' ? 'Artists' : 'Clients';
 

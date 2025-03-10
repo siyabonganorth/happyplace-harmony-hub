@@ -20,6 +20,7 @@ export type Client = {
   phone?: string;
   company?: string;
   notes?: string;
+  documentUrl?: string; // Added documentUrl property
   projects: Project[];
   createdAt: Date;
   createdBy: string;
