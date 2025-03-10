@@ -27,7 +27,7 @@ const projectSchema = z.object({
   description: z.string().optional(),
   clientId: z.string().optional(),
   department: z.enum(['Audiophiles', 'Vismasters', 'adVYBE']),
-  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled']) as z.ZodEnum<[ProjectStatus, ...ProjectStatus[]]>,
+  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled']),
   progress: z.number().min(0).max(100),
   deadline: z.date().optional(),
   assignees: z.array(z.string()).optional()

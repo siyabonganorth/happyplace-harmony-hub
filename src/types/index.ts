@@ -1,4 +1,3 @@
-
 export type Department = 'Audiophiles' | 'Vismasters' | 'adVYBE';
 
 export type UserRole = 'admin' | 'director' | 'head' | 'member';
@@ -20,7 +19,7 @@ export type Client = {
   phone?: string;
   company?: string;
   notes?: string;
-  documentUrl?: string; // Added documentUrl property
+  documentUrl?: string;
   projects: Project[];
   createdAt: Date;
   createdBy: string;
@@ -48,7 +47,9 @@ export type ProjectStatus =
   | 'in-progress' 
   | 'review' 
   | 'completed' 
-  | 'on-hold';
+  | 'on-hold'
+  | 'failed'
+  | 'canceled';
 
 export type Task = {
   id: string;

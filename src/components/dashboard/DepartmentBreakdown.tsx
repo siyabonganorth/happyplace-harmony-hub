@@ -78,9 +78,9 @@ const DepartmentBreakdown: React.FC<DepartmentBreakdownProps> = ({ projects }) =
     if (departmentIndex !== -1) {
       if (project.status === 'completed') {
         departmentMetrics[departmentIndex].completed += 1;
-      } else if (project.status === 'failed' as ProjectStatus) {
+      } else if (project.status === 'failed') {
         departmentMetrics[departmentIndex].failed += 1;
-      } else if (project.status === 'canceled' as ProjectStatus) {
+      } else if (project.status === 'canceled') {
         departmentMetrics[departmentIndex].canceled += 1;
       } else {
         departmentMetrics[departmentIndex].active += 1;
