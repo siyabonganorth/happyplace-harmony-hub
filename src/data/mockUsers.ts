@@ -66,3 +66,38 @@ export const MOCK_USERS: User[] = [
     createdAt: new Date("2023-01-03")
   }
 ];
+
+// Alias for MOCK_USERS for backward compatibility 
+export const USERS = MOCK_USERS;
+
+// Demo credentials for the login form
+export const DEMO_CREDENTIALS = [
+  {
+    email: "ceejay@vybe.company",
+    role: "Director"
+  },
+  {
+    email: "mntungwa@vybe.company",
+    role: "Audiophiles Head"
+  },
+  {
+    email: "neo@vybe.company",
+    role: "Vismasters Head"
+  },
+  {
+    email: "lungile@vybe.company",
+    role: "adVYBE Head"
+  },
+  {
+    email: "audio1@vybe.company",
+    role: "Audiophiles Member"
+  },
+  {
+    email: "vis1@vybe.company",
+    role: "Vismasters Member"
+  },
+  {
+    email: "ad1@vybe.company",
+    role: "adVYBE Member"
+  }
+];

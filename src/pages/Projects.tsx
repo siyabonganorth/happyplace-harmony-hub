@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { projectsApi } from '../services/api';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
