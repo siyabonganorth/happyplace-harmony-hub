@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,7 +27,7 @@ const projectSchema = z.object({
   description: z.string().optional(),
   clientId: z.string().optional(),
   department: z.enum(['Audiophiles', 'Vismasters', 'adVYBE']),
-  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled']),
+  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled']) as z.ZodEnum<[ProjectStatus, ...ProjectStatus[]]>,
   progress: z.number().min(0).max(100),
   deadline: z.date().optional(),
   assignees: z.array(z.string()).optional()
@@ -88,7 +89,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
           description: values.description || '',
           clientId: values.clientId || '',
           department: values.department,
-          status: values.status,
+          status: values.status as ProjectStatus,
           progress: values.progress,
           deadline: values.deadline,
           assignees: values.assignees || [],

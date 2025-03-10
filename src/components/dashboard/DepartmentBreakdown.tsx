@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Project, Department } from '../../types';
+import { Project, Department, ProjectStatus } from '../../types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface DepartmentMetrics {
@@ -78,9 +78,9 @@ const DepartmentBreakdown: React.FC<DepartmentBreakdownProps> = ({ projects }) =
     if (departmentIndex !== -1) {
       if (project.status === 'completed') {
         departmentMetrics[departmentIndex].completed += 1;
-      } else if (project.status === 'failed') {
+      } else if (project.status === 'failed' as ProjectStatus) {
         departmentMetrics[departmentIndex].failed += 1;
-      } else if (project.status === 'canceled') {
+      } else if (project.status === 'canceled' as ProjectStatus) {
         departmentMetrics[departmentIndex].canceled += 1;
       } else {
         departmentMetrics[departmentIndex].active += 1;
