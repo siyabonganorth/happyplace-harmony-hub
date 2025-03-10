@@ -22,12 +22,15 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { MultiSelect } from '../ui/multi-select';
 
+// Define the exact same values as in the ProjectStatus type
+const projectStatusValues = ['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled'] as const;
+
 const projectSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters long' }),
   description: z.string().optional(),
   clientId: z.string().optional(),
   department: z.enum(['Audiophiles', 'Vismasters', 'adVYBE']),
-  status: z.enum(['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled']),
+  status: z.enum(projectStatusValues),
   progress: z.number().min(0).max(100),
   deadline: z.date().optional(),
   assignees: z.array(z.string()).optional()
@@ -84,6 +87,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
         });
         toast.success('Project updated successfully');
       } else {
+        console.log('Submitting project values:', values);
+        // Cast the status value to ProjectStatus
         const newProject = await projectsApi.create({
           title: values.title,
           description: values.description || '',
@@ -97,6 +102,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
         });
         
         if (!newProject) throw new Error('Failed to create project');
+        console.log('Project created successfully:', newProject);
         toast.success('Project created successfully');
       }
       

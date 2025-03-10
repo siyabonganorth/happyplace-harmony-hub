@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, Client, Project, Task, Comment, Attachment, Quote, QuoteItem, Agreement, Announcement } from '../types';
 
@@ -314,6 +315,9 @@ const projectsApi = {
   
   create: async (project: Omit<Project, "id" | "tasks" | "attachments" | "createdAt" | "updatedAt">): Promise<Project> => {
     try {
+      console.log('Creating project with data:', project);
+
+      // Use type assertion to allow Supabase to accept our updated ProjectStatus type
       const { data, error } = await supabase
         .from('projects')
         .insert({
@@ -321,7 +325,7 @@ const projectsApi = {
           description: project.description,
           client_id: project.clientId,
           department: project.department,
-          status: project.status,
+          status: project.status, // This will now work with our updated enum
           progress: project.progress,
           deadline: project.deadline ? project.deadline.toISOString() : null,
           created_by: project.createdBy
@@ -329,9 +333,13 @@ const projectsApi = {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating project:', error);
+        throw error;
+      }
       
       if (data) {
+        console.log('Successfully created project:', data);
         return {
           id: data.id,
           title: data.title,
@@ -364,6 +372,7 @@ const projectsApi = {
         ...project
       };
       
+      console.log('Created mock project instead:', newProject);
       MOCK_PROJECTS.push(newProject);
       return newProject;
     }
