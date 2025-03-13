@@ -1,5 +1,5 @@
 
-import { supabase, convertProjectStatus } from '@/integrations/supabase/client';
+import { supabase, convertProjectStatus, convertDepartment } from '@/integrations/supabase/client';
 import { User, Client, Project, Task, Comment, Attachment, Quote, QuoteItem, Agreement, Announcement } from '../types';
 
 // ========== MOCK DATA ==========
@@ -10,6 +10,7 @@ import { User, Client, Project, Task, Comment, Attachment, Quote, QuoteItem, Agr
 let MOCK_PROJECTS: Project[] = [];
 let MOCK_TASKS: Task[] = [];
 let MOCK_CLIENTS: Client[] = [];
+let MOCK_ANNOUNCEMENTS: Announcement[] = [];
 
 // ========== API SERVICE ==========
 
@@ -454,13 +455,21 @@ export const projectsApi = {
       // Convert our project status to one that Supabase accepts
       const supabaseStatus = convertProjectStatus(project.status);
       
+      // Convert department to one that Supabase accepts
+      const supabaseDepartment = convertDepartment(project.department);
+      
+      console.log('Converted for Supabase:', { 
+        status: supabaseStatus, 
+        department: supabaseDepartment 
+      });
+      
       const { data, error } = await supabase
         .from('projects')
         .insert({
           title: project.title,
           description: project.description,
           client_id: project.clientId,
-          department: project.department,
+          department: supabaseDepartment,
           status: supabaseStatus,
           progress: project.progress,
           deadline: project.deadline ? project.deadline.toISOString() : null,
@@ -527,13 +536,16 @@ export const projectsApi = {
       // Convert our project status to one that Supabase accepts if it's provided
       const supabaseStatus = updates.status ? convertProjectStatus(updates.status) : undefined;
       
+      // Convert department to one that Supabase accepts if it's provided
+      const supabaseDepartment = updates.department ? convertDepartment(updates.department) : undefined;
+      
       const { data, error } = await supabase
         .from('projects')
         .update({
           title: updates.title,
           description: updates.description,
           client_id: updates.clientId,
-          department: updates.department,
+          department: supabaseDepartment,
           status: supabaseStatus,
           progress: updates.progress,
           deadline: updates.deadline ? updates.deadline.toISOString() : null
@@ -603,7 +615,7 @@ export const projectsApi = {
   }
 };
 
-// Only implementing task APIs we need for demo purposes
+// Implement missing API methods for tasks
 export const tasksApi = {
   getAll: async (): Promise<Task[]> => {
     try {
@@ -636,6 +648,236 @@ export const tasksApi = {
     } catch (error) {
       console.error('Error fetching tasks:', error);
       return MOCK_TASKS;
+    }
+  },
+  
+  // Add the missing methods
+  getById: async (id: string): Promise<Task | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description || undefined,
+        projectId: data.project_id || '',
+        assigneeId: data.assignee_id || undefined,
+        status: data.status,
+        priority: data.priority,
+        dueDate: data.due_date ? new Date(data.due_date) : undefined,
+        department: data.department,
+        comments: [], // Not fetched here
+        attachments: [], // Not fetched here
+        dependencies: [], // Not fetched here
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at),
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      console.error(`Error fetching task with id ${id}:`, error);
+      const task = MOCK_TASKS.find(t => t.id === id);
+      return task || null;
+    }
+  },
+  
+  create: async (task: Omit<Task, "id" | "comments" | "attachments" | "dependencies" | "createdAt" | "updatedAt">): Promise<Task> => {
+    try {
+      // Convert department to one that Supabase accepts
+      const supabaseDepartment = convertDepartment(task.department);
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          title: task.title,
+          description: task.description,
+          project_id: task.projectId,
+          assignee_id: task.assigneeId,
+          status: task.status,
+          priority: task.priority,
+          due_date: task.dueDate ? task.dueDate.toISOString() : null,
+          department: supabaseDepartment,
+          created_by: task.createdBy
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description || undefined,
+        projectId: data.project_id || '',
+        assigneeId: data.assignee_id || undefined,
+        status: data.status,
+        priority: data.priority,
+        dueDate: data.due_date ? new Date(data.due_date) : undefined,
+        department: data.department,
+        comments: [],
+        attachments: [],
+        dependencies: [],
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at),
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      console.error('Error creating task:', error);
+      
+      // Fall back to creating a mock task
+      const newTask: Task = {
+        id: `mock-${Date.now()}`,
+        title: task.title,
+        description: task.description,
+        projectId: task.projectId,
+        assigneeId: task.assigneeId,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        department: task.department,
+        comments: [],
+        attachments: [],
+        dependencies: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: task.createdBy
+      };
+      
+      MOCK_TASKS.push(newTask);
+      return newTask;
+    }
+  },
+  
+  update: async (id: string, updates: Partial<Task>): Promise<Task | null> => {
+    try {
+      // Convert department to one that Supabase accepts if it's provided
+      const supabaseDepartment = updates.department ? convertDepartment(updates.department) : undefined;
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          title: updates.title,
+          description: updates.description,
+          project_id: updates.projectId,
+          assignee_id: updates.assigneeId,
+          status: updates.status,
+          priority: updates.priority,
+          due_date: updates.dueDate ? updates.dueDate.toISOString() : undefined,
+          department: supabaseDepartment
+        })
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description || undefined,
+        projectId: data.project_id || '',
+        assigneeId: data.assignee_id || undefined,
+        status: data.status,
+        priority: data.priority,
+        dueDate: data.due_date ? new Date(data.due_date) : undefined,
+        department: data.department,
+        comments: [],
+        attachments: [],
+        dependencies: [],
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at),
+        createdBy: data.created_by
+      };
+    } catch (error) {
+      console.error(`Error updating task with id ${id}:`, error);
+      
+      // Fall back to updating mock task
+      const taskIndex = MOCK_TASKS.findIndex(t => t.id === id);
+      if (taskIndex !== -1) {
+        MOCK_TASKS[taskIndex] = {
+          ...MOCK_TASKS[taskIndex],
+          ...updates,
+          updatedAt: new Date()
+        };
+        return MOCK_TASKS[taskIndex];
+      }
+      
+      return null;
+    }
+  },
+  
+  delete: async (id: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      return true;
+    } catch (error) {
+      console.error(`Error deleting task with id ${id}:`, error);
+      
+      // Fall back to deleting from mock data
+      const taskIndex = MOCK_TASKS.findIndex(t => t.id === id);
+      if (taskIndex !== -1) {
+        MOCK_TASKS.splice(taskIndex, 1);
+        return true;
+      }
+      
+      return false;
+    }
+  }
+};
+
+// Add missing API for announcements
+export const announcementsApi = {
+  getActive: async (): Promise<Announcement[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .or('expires_at.is.null,expires_at.gt.now()');
+        
+      if (error) throw error;
+      
+      return data.map(announcement => ({
+        id: announcement.id,
+        title: announcement.title,
+        content: announcement.content,
+        important: announcement.important || false,
+        expiresAt: announcement.expires_at ? new Date(announcement.expires_at) : undefined,
+        createdAt: new Date(announcement.created_at),
+        createdBy: announcement.created_by
+      }));
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      return MOCK_ANNOUNCEMENTS;
+    }
+  }
+};
+
+// Add missing API for dependencies
+export const dependenciesApi = {
+  getTaskDependencies: async (taskId: string): Promise<string[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('task_dependencies')
+        .select('dependent_task_id')
+        .eq('parent_task_id', taskId);
+        
+      if (error) throw error;
+      
+      return data.map(dep => dep.dependent_task_id);
+    } catch (error) {
+      console.error(`Error fetching dependencies for task ${taskId}:`, error);
+      return [];
     }
   }
 };

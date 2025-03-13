@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -7,7 +6,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, MessageCircle, BrandTelegram } from 'lucide-react';
+import { Plus, MessageCircle, MessageCircleMore } from 'lucide-react';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import { ChatMessage, ChatRoom, User } from '@/types';
@@ -15,7 +14,6 @@ import { USERS } from '@/data/mockUsers';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
-// Mock data for initial demo
 const MOCK_CHAT_ROOMS: ChatRoom[] = [
   {
     id: '1',
@@ -27,19 +25,19 @@ const MOCK_CHAT_ROOMS: ChatRoom[] = [
     id: '2',
     name: 'Audiophiles Team',
     participants: USERS.filter(u => u.department === 'Audiophiles').map(u => u.id),
-    lastMessageTime: new Date(Date.now() - 3600000), // 1 hour ago
+    lastMessageTime: new Date(Date.now() - 3600000),
   },
   {
     id: '3',
     name: 'Vismasters Team',
     participants: USERS.filter(u => u.department === 'Vismasters').map(u => u.id),
-    lastMessageTime: new Date(Date.now() - 86400000), // 1 day ago
+    lastMessageTime: new Date(Date.now() - 86400000),
   },
   {
     id: '4', 
     name: 'Telegram Updates',
     participants: USERS.map(u => u.id),
-    lastMessageTime: new Date(Date.now() - 43200000), // 12 hours ago
+    lastMessageTime: new Date(Date.now() - 43200000),
     telegramChatId: '-100123456789',
   }
 ];
@@ -106,7 +104,6 @@ const Chat: React.FC = () => {
   });
 
   useEffect(() => {
-    // Select the first chat by default if none is selected
     if (chatRooms.length > 0 && !selectedChatId) {
       setSelectedChatId(chatRooms[0].id);
     }
@@ -128,23 +125,19 @@ const Chat: React.FC = () => {
       isRead: false,
     };
 
-    // Update messages
     setMessages(prev => ({
       ...prev,
       [selectedChatId]: [...(prev[selectedChatId] || []), newMessage],
     }));
 
-    // Update lastMessageTime in the selected chat
     setChatRooms(prev =>
       prev.map(chat =>
         chat.id === selectedChatId ? { ...chat, lastMessageTime: new Date() } : chat
       )
     );
 
-    // If this is a Telegram-linked chat, we would send to Telegram API here
     const selectedChat = chatRooms.find(chat => chat.id === selectedChatId);
     if (selectedChat?.telegramChatId) {
-      // In a real implementation, we would call Telegram API here
       console.log(`Sending to Telegram chat ${selectedChat.telegramChatId}: ${content}`);
       toast.info("This would send to Telegram in production");
     }
@@ -212,7 +205,7 @@ const Chat: React.FC = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        <BrandTelegram className="h-4 w-4 text-blue-500" />
+                        <MessageCircleMore className="h-4 w-4 text-blue-500" />
                         Telegram Chat ID (Optional)
                       </FormLabel>
                       <FormControl>

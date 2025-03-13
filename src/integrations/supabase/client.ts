@@ -21,3 +21,14 @@ export function convertProjectStatus(status: string): 'planning' | 'in-progress'
   // Return the status directly if it's already one of the expected values
   return status as 'planning' | 'in-progress' | 'review' | 'completed' | 'on-hold';
 }
+
+// Utility function to handle department conversion for Supabase
+export function convertDepartment(department: string): 'Audiophiles' | 'Vismasters' | 'adVYBE' {
+  // If department is TeamSync, map it to adVYBE temporarily until Supabase schema is updated
+  if (department === 'TeamSync') {
+    return 'adVYBE';
+  }
+  
+  // Return the department directly if it's already one of the expected values
+  return department as 'Audiophiles' | 'Vismasters' | 'adVYBE';
+}

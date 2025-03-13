@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Send, BrandTelegram } from 'lucide-react';
+import { Send, MessageCircleMore } from 'lucide-react';
 import { ChatMessage, User } from '@/types';
 import { format } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
@@ -58,7 +58,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         <CardTitle className="text-lg flex items-center gap-2">
           <span>{chatName}</span>
           {isTelegramLinked && (
-            <BrandTelegram className="h-5 w-5 text-blue-500" />
+            <MessageCircleMore className="h-5 w-5 text-blue-500" />
           )}
         </CardTitle>
       </CardHeader>

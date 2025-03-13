@@ -9,7 +9,7 @@ import Announcements from '../components/dashboard/Announcements';
 import CreateQuoteButton from '../components/quotes/CreateQuoteButton';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { announcementsApi, projectsApi, tasksApi } from '../services/api';
+import { projectsApi, tasksApi } from '../services/api';
 import { Project, Task, Announcement } from '../types';
 import { PlusCircle } from 'lucide-react';
 
@@ -30,10 +30,9 @@ const Dashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        const [projectsData, tasksData, announcementsData] = await Promise.all([
+        const [projectsData, tasksData] = await Promise.all([
           projectsApi.getAll(),
-          tasksApi.getAll(),
-          announcementsApi.getActive()
+          tasksApi.getAll()
         ]);
         
         // Filter projects by department if user is not a director
@@ -56,7 +55,8 @@ const Dashboard: React.FC = () => {
         
         setProjects(filteredProjects);
         setTasks(filteredTasks);
-        setAnnouncements(announcementsData);
+        // Mock announcements for now
+        setAnnouncements([]);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {

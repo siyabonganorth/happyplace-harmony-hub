@@ -73,6 +73,7 @@ const TaskDueDateDepartment: React.FC = () => {
                 <SelectItem value="Audiophiles">Audiophiles</SelectItem>
                 <SelectItem value="Vismasters">Vismasters</SelectItem>
                 <SelectItem value="adVYBE">adVYBE</SelectItem>
+                <SelectItem value="TeamSync">TeamSync</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
