@@ -4,7 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { tasksApi } from '../services/api';
 import { Task } from '../types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2, Edit, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const TaskDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,6 +71,31 @@ const TaskDetail: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Tasks
+        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate(`/tasks/${id}/edit`)}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleDeleteTask}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </Button>
+        </div>
+      </div>
+
       <h1 className="text-2xl font-bold mb-4">{task.title}</h1>
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

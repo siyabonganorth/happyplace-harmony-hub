@@ -1,4 +1,3 @@
-
 export type Department = 'Audiophiles' | 'Vismasters' | 'adVYBE' | 'TeamSync';
 
 export type UserRole = 'admin' | 'director' | 'head' | 'member';

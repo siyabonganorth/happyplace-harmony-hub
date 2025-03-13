@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +21,6 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { MultiSelect } from '../ui/multi-select';
 
-// Define the exact same values as in the ProjectStatus type
 const projectStatusValues = ['planning', 'in-progress', 'review', 'completed', 'on-hold', 'failed', 'canceled'] as const;
 
 const projectSchema = z.object({
@@ -54,7 +52,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
       title: existingProject?.title || '',
       description: existingProject?.description || '',
       clientId: existingProject?.clientId || '',
-      department: existingProject?.department || (user?.department as Department) || 'Audiophiles',
+      department: existingProject?.department || (user?.department === 'TeamSync' ? 'Audiophiles' : user?.department as Department) || 'Audiophiles',
       status: existingProject?.status || 'planning',
       progress: existingProject?.progress || 0,
       deadline: existingProject?.deadline,
@@ -88,7 +86,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ existingProject, onSuccess })
         toast.success('Project updated successfully');
       } else {
         console.log('Submitting project values:', values);
-        // Cast the status value to ProjectStatus
         const newProject = await projectsApi.create({
           title: values.title,
           description: values.description || '',
