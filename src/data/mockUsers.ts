@@ -39,6 +39,14 @@ export const MOCK_USERS: User[] = [
     department: "adVYBE",
     createdAt: new Date("2023-01-02")
   },
+  {
+    id: "team-head-1",
+    email: "harmony@vybecartel.com",
+    name: "Harmony",
+    role: "head",
+    department: "TeamSync",
+    createdAt: new Date("2023-01-02")
+  },
   
   // Regular department members
   {
@@ -63,6 +71,14 @@ export const MOCK_USERS: User[] = [
     name: "Ad Team Member 1",
     role: "member",
     department: "adVYBE",
+    createdAt: new Date("2023-01-03")
+  },
+  {
+    id: "team-member-1",
+    email: "teamsync1@vybecartel.com",
+    name: "TeamSync Member 1",
+    role: "member",
+    department: "TeamSync",
     createdAt: new Date("2023-01-03")
   }
 ];
@@ -89,6 +105,10 @@ export const DEMO_CREDENTIALS = [
     role: "adVYBE Head"
   },
   {
+    email: "harmony@vybecartel.com",
+    role: "TeamSync Head"
+  },
+  {
     email: "audio1@vybecartel.com",
     role: "Audiophiles Member"
   },
@@ -99,5 +119,9 @@ export const DEMO_CREDENTIALS = [
   {
     email: "ad1@vybecartel.com",
     role: "adVYBE Member"
+  },
+  {
+    email: "teamsync1@vybecartel.com",
+    role: "TeamSync Member"
   }
 ];

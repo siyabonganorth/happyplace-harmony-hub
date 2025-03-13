@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +16,9 @@ import {
   Megaphone,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Heart,
+  MessageCircle
 } from 'lucide-react';
 
 interface SidebarLink {
@@ -30,7 +31,8 @@ interface SidebarLink {
 const departmentIcons = {
   'Audiophiles': <Music className="h-5 w-5" />,
   'Vismasters': <Video className="h-5 w-5" />,
-  'adVYBE': <Megaphone className="h-5 w-5" />
+  'adVYBE': <Megaphone className="h-5 w-5" />,
+  'TeamSync': <Heart className="h-5 w-5" />
 };
 
 const Sidebar: React.FC = () => {
@@ -43,6 +45,7 @@ const Sidebar: React.FC = () => {
     { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-5 w-5" /> },
     { name: 'Projects', path: '/projects', icon: <Briefcase className="h-5 w-5" /> },
     { name: 'Reports', path: '/reports', icon: <BarChart3 className="h-5 w-5" /> },
+    { name: 'Chat', path: '/chat', icon: <MessageCircle className="h-5 w-5" /> },
     { name: 'Settings', path: '/settings', icon: <Settings className="h-5 w-5" /> },
   ];
   
@@ -53,6 +56,13 @@ const Sidebar: React.FC = () => {
       path: '/clients', 
       icon: <Users className="h-5 w-5" />,
       department: 'Audiophiles'
+    });
+  } else if (user?.department === 'TeamSync') {
+    links.splice(2, 0, { 
+      name: 'Recruitment', 
+      path: '/recruitment', 
+      icon: <Users className="h-5 w-5" />,
+      department: 'TeamSync'
     });
   } else {
     links.splice(2, 0, { 

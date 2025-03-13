@@ -1,4 +1,5 @@
-export type Department = 'Audiophiles' | 'Vismasters' | 'adVYBE';
+
+export type Department = 'Audiophiles' | 'Vismasters' | 'adVYBE' | 'TeamSync';
 
 export type UserRole = 'admin' | 'director' | 'head' | 'member';
 
@@ -161,4 +162,71 @@ export type Notification = {
   userId: string;
   linkTo?: string;
   createdAt: Date;
+};
+
+export type Recruit = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  position: string;
+  department: Department;
+  status: RecruitmentStatus;
+  notes?: string;
+  resumeUrl?: string;
+  interviewDate?: Date;
+  testTaskUrl?: string;
+  testTaskResult?: string;
+  createdAt: Date;
+  updatedBy?: string;
+  updatedAt?: Date;
+};
+
+export type RecruitmentStatus = 
+  | 'new-application'
+  | 'screening'
+  | 'interview-scheduled'
+  | 'test-task-sent'
+  | 'test-task-completed'
+  | 'offer-made'
+  | 'onboarding'
+  | 'rejected'
+  | 'hired';
+
+export type TeamMember = {
+  id: string;
+  userId: string;
+  contractType: ContractType;
+  startDate: Date;
+  endDate?: Date;
+  benefitsEligible: boolean;
+  activePerks: string[];
+  attendanceRate?: number;
+  lastActivityDate?: Date;
+  notes?: string;
+};
+
+export type ContractType = 
+  | 'full-time'
+  | 'part-time'
+  | 'project-based'
+  | '3-track-deal'
+  | 'feature-clearance'
+  | 'intern';
+
+export type ChatMessage = {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: Date;
+  isRead: boolean;
+  chatId: string;
+};
+
+export type ChatRoom = {
+  id: string;
+  name: string;
+  participants: string[];
+  lastMessageTime?: Date;
+  telegramChatId?: string;
 };
