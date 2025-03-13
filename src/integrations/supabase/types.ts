@@ -465,7 +465,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      department_type: "Audiophiles" | "Vismasters" | "adVYBE"
+      department_type: "Audiophiles" | "Vismasters" | "adVYBE" | "TeamSync"
       project_status:
         | "planning"
         | "in-progress"

@@ -49,6 +49,16 @@ const Sidebar: React.FC = () => {
     { name: 'Settings', path: '/settings', icon: <Settings className="h-5 w-5" /> },
   ];
   
+  // Add TeamSync dashboard for TeamSync department
+  if (user?.department === 'TeamSync') {
+    links.splice(1, 0, { 
+      name: 'TeamSync Dashboard', 
+      path: '/teamsync-dashboard', 
+      icon: <Heart className="h-5 w-5" />,
+      department: 'TeamSync'
+    });
+  }
+  
   // Add department-specific client link
   if (user?.department === 'Audiophiles') {
     links.splice(2, 0, { 
@@ -58,7 +68,7 @@ const Sidebar: React.FC = () => {
       department: 'Audiophiles'
     });
   } else if (user?.department === 'TeamSync') {
-    links.splice(2, 0, { 
+    links.splice(3, 0, { 
       name: 'Recruitment', 
       path: '/recruitment', 
       icon: <Users className="h-5 w-5" />,
@@ -70,6 +80,15 @@ const Sidebar: React.FC = () => {
       path: '/clients', 
       icon: <Users className="h-5 w-5" />,
       department: user?.department
+    });
+  }
+
+  // Add Tasks link for non-TeamSync users or those with head/director roles
+  if (user?.department !== 'TeamSync' || user?.role === 'head' || user?.role === 'director') {
+    links.splice(3, 0, {
+      name: 'Tasks',
+      path: '/tasks',
+      icon: <Briefcase className="h-5 w-5" />
     });
   }
 

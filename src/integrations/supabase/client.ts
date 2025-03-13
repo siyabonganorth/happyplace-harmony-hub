@@ -23,12 +23,7 @@ export function convertProjectStatus(status: string): 'planning' | 'in-progress'
 }
 
 // Utility function to handle department conversion for Supabase
-export function convertDepartment(department: string): 'Audiophiles' | 'Vismasters' | 'adVYBE' {
-  // If department is TeamSync, map it to adVYBE temporarily until Supabase schema is updated
-  if (department === 'TeamSync') {
-    return 'adVYBE';
-  }
-  
-  // Return the department directly if it's already one of the expected values
-  return department as 'Audiophiles' | 'Vismasters' | 'adVYBE';
+export function convertDepartment(department: string): 'Audiophiles' | 'Vismasters' | 'adVYBE' | 'TeamSync' {
+  // Return the department directly as it is now one of the expected values
+  return department as 'Audiophiles' | 'Vismasters' | 'adVYBE' | 'TeamSync';
 }

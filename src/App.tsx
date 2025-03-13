@@ -16,6 +16,8 @@ import Tasks from "./pages/Tasks";
 import CreateTask from "./pages/CreateTask"; 
 import TaskDetail from "./pages/TaskDetail";
 import NotFound from "./pages/NotFound";
+import TeamSyncDashboard from "./pages/TeamSyncDashboard";
+import Recruitment from "./pages/Recruitment";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ const App = () => (
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/tasks/create" element={<CreateTask />} />
                 <Route path="/tasks/:id" element={<TaskDetail />} />
+                <Route path="/teamsync-dashboard" element={<TeamSyncDashboard />} />
+                <Route path="/recruitment" element={<Recruitment />} />
               </Route>
             </Route>
             
